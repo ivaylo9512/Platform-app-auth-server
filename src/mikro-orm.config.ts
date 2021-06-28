@@ -1,5 +1,6 @@
 import { MikroORM } from '@mikro-orm/core';
 import path from 'path';
+import User from './entities/User';
 
 export default {
     migrations:{
@@ -9,7 +10,7 @@ export default {
     dbName: 'platform-auth',
     user: 'postgresql',
     password: '1234',
-    entities: [],
+    entities: [User],
     debug: process.env.NODE_ENV !== 'production',
     type: 'postgresql'
 } as Parameters<typeof MikroORM.init>[0];
