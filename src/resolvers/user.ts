@@ -53,7 +53,18 @@ export default class UserResolver{
             username: userInput.username, 
             password 
         })
-        em.persistAndFlush(user);
+        try{
+            em.persistAndFlush(user);
+        }catch(err){
+            if(err.code === '23505' || err.details.includes('already exists')){
+                return{
+                    errors: [{
+                        field: 'username',
+                        message: 'Username has already been taken'
+                    }]
+                }
+            }
+        }
         return {
             user
         };
