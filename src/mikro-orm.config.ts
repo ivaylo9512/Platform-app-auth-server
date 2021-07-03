@@ -8,7 +8,7 @@ export default {
         pattern: /^[\w-]+\d+\.[tj]s$/
     },
     dbName: 'platform-auth',
-    user: 'postgresql',
+    user: 'postgres',
     password: '1234',
     entities: [User],
     debug: process.env.NODE_ENV !== 'production',

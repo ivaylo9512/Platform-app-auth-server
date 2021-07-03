@@ -1,7 +1,8 @@
 import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
-import { Field } from "type-graphql";
+import { Field, ObjectType } from "type-graphql";
 
 @Entity()
+@ObjectType()
 export default class User{
     @Field()    
     @PrimaryKey()

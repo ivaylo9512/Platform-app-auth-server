@@ -7,6 +7,8 @@ import UserResolver from './resolvers/User';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
+    await orm.getMigrator().up();
+
     const app = express();
 
     const apolloServer = new ApolloServer({
