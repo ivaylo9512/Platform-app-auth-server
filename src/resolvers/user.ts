@@ -1,19 +1,39 @@
-import { Resolver, Query, Ctx, Arg, InputType, Field, Mutation, ObjectType } from "type-graphql";
-import User from "src/entities/User";
+import { Resolver, Ctx, Arg, Mutation, Query } from 'type-graphql';
+import User from '../entities/User';
 import { ApolloContext } from "src/types";
 import argon2 from 'argon2';
-import UserResponse from "./types/UserResponse";
-import UserInput from "./types/UserInput";
+import UserResponse from './types/UserResponse';
+import UserInput from './types/UserInput';
 
 @Resolver()
 export default class UserResolver{
     @Query(() => UserResponse)
+    async findById(
+        @Arg('id') id: number,
+        @Ctx() { em }: ApolloContext
+    ): Promise<UserResponse> {
+        const user = await em.findOne(User, { id })
+        if(!user){
+            return{
+                errors:[{
+                    field: 'id',
+                    message: `Entity with id: ${id} doesn't exist.`
+                }]
+            }
+        }
+        //Todo check token id vs find userId or role admin
+        return {
+            user
+        }
+    }
+
+    @Mutation(() => UserResponse)
     async login(
         @Arg('userInput') userInput: UserInput,
-        @Ctx() ctx: ApolloContext
+        @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
         const password = await argon2.hash(userInput.password);
-        const user = await ctx.em.findOne(User, { username: userInput.username, password })
+        const user = await em.findOne(User, { username: userInput.username, password })
         if(!user) {
             return {
                 errors: [{
