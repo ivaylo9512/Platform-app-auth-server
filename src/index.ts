@@ -4,12 +4,17 @@ import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import UserResolver from './resolvers/User';
+import cors from 'cors';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
     await orm.getMigrator().up();
 
     const app = express();
+    app.use(cors({
+        origin: 'http://localhost:3000',
+        credentials: true
+    }))
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
