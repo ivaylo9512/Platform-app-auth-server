@@ -3,7 +3,8 @@ import User from '../entities/User';
 import { ApolloContext } from "src/types";
 import argon2 from 'argon2';
 import UserResponse from './types/UserResponse';
-import UserInput from './types/UserInput';
+import UserInput from './types/LoginInput';
+import RegisterInput from './types/RegisterInput';
 
 @Resolver()
 export default class UserResolver{
@@ -49,10 +50,10 @@ export default class UserResolver{
 
     @Mutation(() => UserResponse)
     async register(
-        @Arg('userInput') userInput: UserInput,
+        @Arg('registerInput') registerInput: RegisterInput,
         @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
-        if(userInput.username.length < 7){
+        if(registerInput.username.length < 7){
             return {
                 errors: [{ 
                     field: 'username', 
@@ -60,7 +61,7 @@ export default class UserResolver{
                 }]
             }
         }
-        if(userInput.password.length < 10){
+        if(registerInput.password.length < 10){
             return {
                 errors: [{ 
                     field: 'username', 
@@ -68,13 +69,15 @@ export default class UserResolver{
                 }]
             }
         }
-        const password = await argon2.hash(userInput.password);
+        const password = await argon2.hash(registerInput.password);
         const user = em.create(User, { 
-            username: userInput.username, 
-            password 
+            username: registerInput.username, 
+            password,
+            firstName: registerInput.firstName, 
+            lastName: registerInput.lastName 
         })
         try{
-            em.persistAndFlush(user);
+            await em.persistAndFlush(user);
         }catch(err){
             if(err.code === '23505' || err.details.includes('already exists')){
                 return{
@@ -85,6 +88,7 @@ export default class UserResolver{
                 }
             }
         }
+
         return {
             user
         };

@@ -20,4 +20,16 @@ export default class User{
     
     @Property({ type: 'date', onUpdate: () => new Date() })
     updatedAt = new Date();
+
+    @Field(() => String)
+    @Property({ type: 'text'})
+    firstName!: string
+
+    @Field(() => String)
+    @Property({ type: 'text'})
+    lastName!: string
+
+    @Field(() => String)
+    @Property({ type: 'date' })
+    age!: Date
 }
