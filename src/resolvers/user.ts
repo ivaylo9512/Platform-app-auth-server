@@ -74,12 +74,13 @@ export default class UserResolver{
             username: registerInput.username, 
             password,
             firstName: registerInput.firstName, 
-            lastName: registerInput.lastName 
+            lastName: registerInput.lastName,
+            age: registerInput.age
         })
         try{
             await em.persistAndFlush(user);
         }catch(err){
-            if(err.code === '23505' || err.details.includes('already exists')){
+            if(err.code === '23505' || (err.details && err.details.includes('already exists'))){
                 return{
                     errors: [{
                         field: 'username',

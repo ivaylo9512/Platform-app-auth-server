@@ -11,5 +11,5 @@ export default class RegisterInput {
     @Field()
     lastName: string
     @Field()
-    date: Date
+    age: Date
 }
