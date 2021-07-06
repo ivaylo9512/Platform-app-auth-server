@@ -75,7 +75,8 @@ export default class UserResolver{
             password,
             firstName: registerInput.firstName, 
             lastName: registerInput.lastName,
-            age: registerInput.age
+            age: registerInput.age,
+            email: registerInput.email
         })
         try{
             await em.persistAndFlush(user);

@@ -30,6 +30,10 @@ export default class User{
     lastName!: string
 
     @Field(() => String)
+    @Property({ type: 'text'})
+    email!: string
+
+    @Field(() => String)
     @Property({ type: 'date' })
     age!: Date
 }

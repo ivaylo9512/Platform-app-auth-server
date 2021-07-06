@@ -11,5 +11,7 @@ export default class RegisterInput {
     @Field()
     lastName: string
     @Field()
+    email: string
+    @Field()
     age: Date
 }
