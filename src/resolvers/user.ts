@@ -5,6 +5,7 @@ import argon2 from 'argon2';
 import UserResponse from './types/UserResponse';
 import UserInput from './types/LoginInput';
 import RegisterInput from './types/RegisterInput';
+import validateEmail from '../helpers/validateEmail';
 
 @Resolver()
 export default class UserResolver{
@@ -34,12 +35,16 @@ export default class UserResolver{
         @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
         const password = await argon2.hash(userInput.password);
-        const user = await em.findOne(User, { username: userInput.username, password })
+        const user = await em.findOne(User, { 
+            ...userInput.username ? { username: userInput.username } : { email: userInput.email }, 
+            password 
+        })
+
         if(!user) {
             return {
                 errors: [{
-                    field: 'username',
-                    message: 'Incorrect username or password.'
+                    field: 'login',
+                    message: 'Incorrect username, email or password.'
                 }]
             }
         }
@@ -53,6 +58,14 @@ export default class UserResolver{
         @Arg('registerInput') registerInput: RegisterInput,
         @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
+        if(!validateEmail(registerInput.email)){
+            return {
+                errors: [{
+                    field: 'email',
+                    message: 'Email is incorect'
+                }]
+            }
+        }
         if(registerInput.username.length < 7){
             return {
                 errors: [{ 
@@ -81,7 +94,17 @@ export default class UserResolver{
         try{
             await em.persistAndFlush(user);
         }catch(err){
-            if(err.code === '23505' || (err.details && err.details.includes('already exists'))){
+            if(err.code === '23505' || (err.detail && err.detail.includes('already exists'))){
+
+                if(err.detail.includes('email')){
+                    return{
+                        errors: [{
+                            field: 'email',
+                            message: 'Email is already in use.'
+                        }]
+                    }
+                }
+                
                 return{
                     errors: [{
                         field: 'username',
