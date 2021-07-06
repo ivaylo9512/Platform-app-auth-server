@@ -22,15 +22,15 @@ export default class User{
     updatedAt = new Date();
 
     @Field(() => String)
-    @Property({ type: 'text'})
+    @Property({ type: 'text' })
     firstName!: string
 
     @Field(() => String)
-    @Property({ type: 'text'})
+    @Property({ type: 'text' })
     lastName!: string
 
     @Field(() => String)
-    @Property({ type: 'text'})
+    @Property({ type: 'text', unique: true })
     email!: string
 
     @Field(() => String)
