@@ -34,13 +34,11 @@ export default class UserResolver{
         @Arg('userInput') userInput: UserInput,
         @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
-        const password = await argon2.hash(userInput.password);
-        const user = await em.findOne(User, { 
-            ...userInput.username ? { username: userInput.username } : { email: userInput.email }, 
-            password 
-        })
-
-        if(!user) {
+        const user = await em.findOne(User,  userInput.username ? 
+            { username: userInput.username } : { email: userInput.email } 
+        )
+        
+        if(!user || !await argon2.verify(user.password, userInput.password)) {
             return {
                 errors: [{
                     field: 'login',
