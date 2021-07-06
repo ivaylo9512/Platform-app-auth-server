@@ -5,7 +5,7 @@ import argon2 from 'argon2';
 import UserResponse from './types/UserResponse';
 import UserInput from './types/LoginInput';
 import RegisterInput from './types/RegisterInput';
-import validateEmail from '../helpers/validateEmail';
+import validateRegister from '../helpers/validateRegister';
 
 @Resolver()
 export default class UserResolver{
@@ -58,30 +58,13 @@ export default class UserResolver{
         @Arg('registerInput') registerInput: RegisterInput,
         @Ctx() { em }: ApolloContext
     ): Promise<UserResponse> {
-        if(!validateEmail(registerInput.email)){
-            return {
-                errors: [{
-                    field: 'email',
-                    message: 'Email is incorect'
-                }]
+        const errors = validateRegister(registerInput);
+        if(errors){
+            return{
+                errors
             }
         }
-        if(registerInput.username.length < 7){
-            return {
-                errors: [{ 
-                    field: 'username', 
-                    message: 'Username must be more than 7 characters.'
-                }]
-            }
-        }
-        if(registerInput.password.length < 10){
-            return {
-                errors: [{ 
-                    field: 'username', 
-                    message: 'Username must be more than 10 characters.'
-                }]
-            }
-        }
+
         const password = await argon2.hash(registerInput.password);
         const user = em.create(User, { 
             username: registerInput.username, 
@@ -104,7 +87,7 @@ export default class UserResolver{
                         }]
                     }
                 }
-                
+
                 return{
                     errors: [{
                         field: 'username',
