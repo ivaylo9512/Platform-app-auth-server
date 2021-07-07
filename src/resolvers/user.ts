@@ -6,9 +6,29 @@ import UserResponse from './types/UserResponse';
 import UserInput from './types/LoginInput';
 import RegisterInput from './types/RegisterInput';
 import validateRegister from '../helpers/validateRegister';
+import { v4 } from 'uuid';
+import { FORGOT_PASSWORD } from '../constants';
 
 @Resolver()
 export default class UserResolver{
+    @Mutation(() => UserResponse)
+    async forgotPassword(
+        @Arg('email') email: string,
+        @Ctx() { em, redis }: ApolloContext 
+    ){
+        const user = await em.findOne(User, { email })
+        if(!user){
+            return false;
+        }
+
+        const token = v4();
+        await redis.set(FORGOT_PASSWORD + token, user.id, 'expire', 1000 * 60 * 60);
+                
+        await sendEmail(email, `<a href="http://localhost:3000/change-password/${token}>change password</a>`)
+        
+        return true;
+    }
+    
     @Query(() => UserResponse)
     async findById(
         @Arg('id') id: number,

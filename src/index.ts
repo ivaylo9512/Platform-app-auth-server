@@ -5,6 +5,7 @@ import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import UserResolver from './resolvers/User';
 import cors from 'cors';
+import Redis from 'ioredis';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
@@ -16,12 +17,14 @@ const main = async () => {
         credentials: true
     }))
 
+    const redis = new Redis();
+
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
             resolvers: [UserResolver],
             validate: false
         }),
-        context: { em: orm.em } 
+        context: ({req, res}) => ({ em: orm.em, req, res, redis }) 
     })
 
     apolloServer.applyMiddleware({ app });

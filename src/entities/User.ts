@@ -6,7 +6,7 @@ import { Field, ObjectType } from "type-graphql";
 export default class User{
     @Field()    
     @PrimaryKey()
-    id!: Number
+    id!: number
 
     @Field(() => String)
     @Property({ type: 'text', unique: true })
