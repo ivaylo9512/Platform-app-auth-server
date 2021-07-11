@@ -1,7 +1,6 @@
 import UserInput from "src/resolvers/types/login-input";
 import UserResponse from "src/resolvers/types/user-response";
 import RegisterInput from "src/resolvers/types/register-input";
-import { Redis } from "ioredis";
 import UpdateInput from "src/resolvers/types/update-input";
 
 export default interface UserService  {

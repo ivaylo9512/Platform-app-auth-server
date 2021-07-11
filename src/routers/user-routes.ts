@@ -3,16 +3,16 @@ import { UserRequest } from "src/types";
 
 const router = Router();
 
-router.get('/findById/:id', (req: UserRequest, res) => {
-    res.send(req.service?.findById(Number(req.params.id)));
+router.get('/findById/:id', async (req: UserRequest, res) => {
+    res.send(await req.service?.findById(Number(req.params.id)));
 })
-router.post('/create/', (req: UserRequest, res) => {
-    res.send(req.service?.register(req.body));
+router.post('/create/', async (req: UserRequest, res) => {
+    res.send(await req.service?.register(req.body));
 })
-router.patch('/update', (req: UserRequest, res) => {
-    res.send(req.service?.update(req.body));
+router.patch('/update', async (req: UserRequest, res) => {
+    res.send(await req.service?.update(req.body));
 })
-router.delete('/delete/:id', (req: UserRequest, res) => {
-    res.send(req.service?.delete(Number(req.params.id));
+router.delete('/delete/:id', async (req: UserRequest, res) => {
+    res.send(await req.service?.delete(Number(req.params.id)));
 })
 export default router;

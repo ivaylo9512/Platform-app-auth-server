@@ -36,7 +36,6 @@ export default class UserServiceImpl implements UserService {
         }
     }
 
-
     async login(userInput: UserInput): Promise<UserResponse> {
         const user = await this.em.findOne(User,  userInput.username ? 
             { username: userInput.username } : { email: userInput.email } 
