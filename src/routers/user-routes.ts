@@ -13,6 +13,6 @@ router.patch('/update', (req: UserRequest, res) => {
     res.send(req.service?.update(req.body));
 })
 router.delete('/delete/:id', (req: UserRequest, res) => {
-    res.send(req.service?.delete(req.params.id);
+    res.send(req.service?.delete(Number(req.params.id));
 })
 export default router;

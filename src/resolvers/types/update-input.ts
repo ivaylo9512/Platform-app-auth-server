@@ -3,7 +3,7 @@ import { Field, InputType } from "type-graphql"
 @InputType()
 export default class UpdateInput{
     @Field()
-    id: string
+    id: number
     @Field({ nullable: true })
     username?: string
     @Field({ nullable: true })

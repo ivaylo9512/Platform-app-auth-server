@@ -9,6 +9,7 @@ import RegisterInput from "src/resolvers/types/register-input";
 import { v4 } from 'uuid';
 import { FORGOT_PASSWORD } from '../constants';
 import Redis from 'ioredis';
+import UpdateInput from "src/resolvers/types/update-input";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
@@ -23,7 +24,7 @@ export default class UserServiceImpl implements UserService {
             return{
                 errors:[{
                     field: 'id',
-                    message: `Entity with id: ${id} doesn't exist.`
+                    message: `User with id: ${id} doesn't exist.`
                 }]
             }
         }
@@ -98,6 +99,26 @@ export default class UserServiceImpl implements UserService {
         };
     }
 
+    async update(updateInput: UpdateInput): Promise<UserResponse>{
+        const user = await this.em.findOne(User, { id: updateInput.id });
+
+        if(!user){
+            return{
+                errors: [{
+                    field: 'id',
+                    message: `User with id: ${updateInput.id} doesn't exist.`
+                }]
+            }
+        }
+
+        UserServiceImpl.updateFields(user, updateInput);
+        await this.em.flush();
+
+        return {
+            user
+        };
+    }
+
     async delete(id: number): Promise<boolean>{
         //Todo check token id vs find userId or role admin
 
@@ -121,5 +142,13 @@ export default class UserServiceImpl implements UserService {
         await sendEmail(email, `<a href="http://localhost:3000/change-password/${token}>change password</a>`)
         
         return true;
+    }
+
+    static updateFields(user: { [name: string]: any }, fields: UpdateInput){
+        Object.entries(fields).forEach(([key, value]) => {
+            if(value != undefined){
+                user[key] = value
+            }
+        })
     }
 }
