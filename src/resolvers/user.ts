@@ -9,9 +9,9 @@ export default class UserResolver{
     @Mutation(() => UserResponse)
     async forgotPassword(
         @Arg('email') email: string,
-        @Ctx() { services: { userService }, redis }: ApolloContext 
+        @Ctx() { services: { userService } }: ApolloContext 
     ){
-        userService.forgotPassword(email, redis);
+        userService.forgotPassword(email);
     }
     
     @Query(() => UserResponse)

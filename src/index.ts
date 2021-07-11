@@ -13,8 +13,9 @@ import userRouter from './routers/user-routes';
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
     await orm.getMigrator().up();
-
-    const userService = new UserServiceImpl(orm.em);
+    
+    const redis = new Redis();
+    const userService = new UserServiceImpl(orm.em, redis);
 
     const app = express();
     app.use(cors({
@@ -41,15 +42,14 @@ const main = async () => {
             err.status(500).send(err.message)
         }
     })
-    
-    const redis = new Redis();
+
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
             resolvers: [UserResolver],
             validate: false
         }),
-        context: ({req, res}) => ({ services: { userService }, req, res, redis }) 
+        context: ({req, res}) => ({ services: { userService }, req, res }) 
     })
 
     apolloServer.applyMiddleware({ app });

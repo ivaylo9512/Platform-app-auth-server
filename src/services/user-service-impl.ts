@@ -8,14 +8,16 @@ import validateRegister from "src/helpers/validateRegister";
 import RegisterInput from "src/resolvers/types/register-input";
 import { v4 } from 'uuid';
 import { FORGOT_PASSWORD } from '../constants';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import UpdateInput from "src/resolvers/types/update-input";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
-    
-    constructor(em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>){
+    redis: Redis;
+
+    constructor(em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>, redis: Redis){
         this.em = em;
+        this.redis = redis;
     }
         
     async findById(id: number): Promise<UserResponse>{
@@ -130,14 +132,14 @@ export default class UserServiceImpl implements UserService {
         return true;
     }
 
-    async forgotPassword(email: string, redis: Redis){
+    async forgotPassword(email: string){
         const user = await this.em.findOne(User, { email })
         if(!user){
             return false;
         }
 
         const token = v4();
-        await redis.set(FORGOT_PASSWORD + token, user.id, 'expire', 1000 * 60 * 60);
+        await this.redis.set(FORGOT_PASSWORD + token, user.id, 'expire', 1000 * 60 * 60);
                 
         await sendEmail(email, `<a href="http://localhost:3000/change-password/${token}>change password</a>`)
         

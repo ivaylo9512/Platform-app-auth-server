@@ -9,6 +9,6 @@ export default interface UserService  {
     login(userInput: UserInput): Promise<UserResponse>;
     register(registerInput: RegisterInput): Promise<UserResponse>;
     delete(id: number): Promise<boolean>;
-    forgotPassword(email: string, redis: Redis): void
+    forgotPassword(email: string): void
     update(updateInput: UpdateInput): Promise<UserResponse>
 }

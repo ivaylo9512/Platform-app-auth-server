@@ -1,4 +1,5 @@
-import { MikroORM } from '@mikro-orm/core';
+import { MikroORM, ReflectMetadataProvider } from '@mikro-orm/core';
+import 'reflect-metadata';
 import path from 'path';
 import User from './entities/User';
 
@@ -9,6 +10,7 @@ export default {
     },
     dbName: 'platform-auth',
     user: 'postgres',
+    metadataProvider: ReflectMetadataProvider,
     password: '1234',
     entities: [User],
     debug: process.env.NODE_ENV !== 'production',
