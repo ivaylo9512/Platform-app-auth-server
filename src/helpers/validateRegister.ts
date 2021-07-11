@@ -1,4 +1,4 @@
-import RegisterInput from "../resolvers/types/RegisterInput";
+import RegisterInput from "../resolvers/types/register-input";
 import validateEmail from "./validateEmail";
 
 const validateRegister = (registerInput : RegisterInput) => {
