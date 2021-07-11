@@ -1,10 +1,14 @@
-import { EntityManager, IDatabaseDriver, Connection } from '@mikro-orm/core';
 import { Request, Response } from 'express';
 import { Redis } from 'ioredis';
+import UserService from './services/base/user-service';
 
 export type ApolloContext = {
-    em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>
+    services: { userService: UserService }
     req: Request,
     res: Response,
     redis: Redis,
+}
+
+export interface UserRequest extends Request{
+    service?: UserService;
 }
