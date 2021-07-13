@@ -9,6 +9,8 @@ import Redis from 'ioredis';
 import UserServiceImpl from './services/user-service-impl';
 import { UserRequest } from './types';
 import userRouter from './routers/user-routes';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
@@ -17,12 +19,17 @@ const main = async () => {
     const redis = new Redis();
     const userService = new UserServiceImpl(orm.em, redis);
 
+    if(process.env.NODE_ENV !== 'production'){
+        dotenv.config()
+    }
+
     const app = express();
     app.use(cors({
         origin: 'http://localhost:3000',
         credentials: true
     }))
 
+    app.use(cookieParser(process.env.COOKIE_SECRET));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
