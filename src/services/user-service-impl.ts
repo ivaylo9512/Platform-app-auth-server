@@ -4,12 +4,12 @@ import User from "../entities/User";
 import argon2 from 'argon2';
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import UserService from "./base/user-service";
-import validateRegister from "src/helpers/validateRegister";
-import RegisterInput from "src/resolvers/types/register-input";
+import validateRegister from "../utils/validateRegister";
+import RegisterInput from "../resolvers/types/register-input";
 import { v4 } from 'uuid';
 import { FORGOT_PASSWORD } from '../constants';
 import { Redis } from 'ioredis';
-import UpdateInput from "src/resolvers/types/update-input";
+import UpdateInput from "../resolvers/types/update-input";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
