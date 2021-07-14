@@ -1,6 +1,5 @@
 import { sign }  from 'jsonwebtoken';
 import User from '../entities/User';
-import { authenticate } from 'passport';
 import { CookieOptions } from 'express';
 import { DEFAULT_REFRESH_EXPIRY, DEFAULT_JWT_EXPIRY, DEFAULT_REFRESH_SECRET, DEFAULT_JWT_SECRET } from '../constants';
 
@@ -16,15 +15,15 @@ export const COOKIE_OPTIONS: CookieOptions = {
     maxAge: refreshExpiry * 1000,
     sameSite: "none",
 }
-export const getToken = (user: User) => {
-    return sign(user, jwtSecret, {
-      expiresIn: jwtExpiry,
-    })
-}
-export const getRefreshToken = (user: User) => {
-    const refreshToken = sign(user, refreshSecret, {
-      expiresIn: refreshExpiry,
-    })
-    return refreshToken
-}
-export const verifyUser = authenticate("jwt", { session: false })
+export const getToken = (user: User) => sign({ 
+        id: user.id 
+    }, 
+    jwtSecret, {
+        expiresIn: jwtExpiry,
+})
+export const getRefreshToken = (user: User) => sign({
+        id: user.id
+    }, 
+    refreshSecret, {
+        expiresIn: refreshExpiry
+})
