@@ -4,7 +4,8 @@ import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../aut
 import User from "../entities/user";
 import { refreshSecret } from "../authentication/authenticate";
 import { JwtUser } from "../authentication/jwt-user";
-import UnauthorizedException from "src/expceptions/unauthorized";
+import UnauthorizedException from "../expceptions/unauthorized";
+import { verifyUser } from "../authentication/jwt-strategy";
 
 const router = Router();
 
@@ -33,6 +34,16 @@ router.post('/login', async(req: UserRequest, res: Response) => {
     }
 
     res.send(userResponse);
+})
+router.post('/logout', async(req: UserRequest, res) => {
+    const { signedCookies: { refreshToken } } = req;
+    
+    if(refreshToken){
+        req.service?.removeToken(refreshToken, refreshSecret)
+    }
+
+    res.clearCookie('refreshToken', COOKIE_OPTIONS)
+    res.send();
 })
 router.post('/register', async(req: UserRequest, res) => {
     const userResponse = await req.service?.register(req.body);

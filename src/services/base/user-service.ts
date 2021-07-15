@@ -13,4 +13,5 @@ export default interface UserService  {
     update(updateInput: UpdateInput): Promise<UserResponse>
     getUserFromToken(token: string, secret: string): Promise<User>
     addToken(user: User, token: string, expiryDays: number): void
+    removeToken(token: string, secret: string): void
 }

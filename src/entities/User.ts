@@ -34,13 +34,13 @@ export default class User{
     @Property({ type: 'text', unique: true })
     email!: string;
 
-    @Field(() => String)
-    @Property({ type: 'date' })
-    age!: Date;
+    @Field(() => Int)
+    @Property()
+    age!: number;
 
     @Field(() => String)
     @Property({ type: 'text' })
-    role: string;
+    role = 'user';
 
     @OneToMany(() => RefreshToken, r => r.owner)
     refreshTokens = new Collection<RefreshToken>(this);

@@ -2,7 +2,7 @@ import RegisterInput from "../resolvers/types/register-input";
 import validateEmail from "./validateEmail";
 
 const validateRegister = (registerInput : RegisterInput) => {
-    if(!validateEmail(registerInput.email)){
+    if(!registerInput.email || !validateEmail(registerInput.email)){
         return[{
             field: 'email',
             message: 'Email is incorect'

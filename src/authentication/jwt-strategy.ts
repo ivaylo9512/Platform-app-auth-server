@@ -13,4 +13,3 @@ const strategy = new Strategy(opts, (payload, done) => {
 })
 use(strategy);
 export const verifyUser = authenticate(strategy, { session: false })
-

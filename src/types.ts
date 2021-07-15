@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import UserService from './services/base/user-service';
+import { JwtUser } from './authentication/jwt-user';
 
 export type ApolloContext = {
     services: { userService: UserService }
@@ -9,4 +10,15 @@ export type ApolloContext = {
 
 export interface UserRequest extends Request{
     service?: UserService;
+}
+
+declare module 'jsonwebtoken' {
+    function verify(token: string, secretOrPublicKey: Secret, options?: VerifyOptions): JwtUser;
+}
+declare global {
+    namespace Express {
+      interface User extends JwtUser{
+
+      }
+    }
 }

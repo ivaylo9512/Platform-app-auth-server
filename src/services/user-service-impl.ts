@@ -12,6 +12,7 @@ import { Redis } from 'ioredis';
 import UpdateInput from "../resolvers/types/update-input";
 import { verify } from "jsonwebtoken";
 import RefreshToken from "../entities/refresh-token";
+import UnauthorizedException from "../expceptions/unauthorized";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
@@ -126,7 +127,8 @@ export default class UserServiceImpl implements UserService {
         const payload = verify(token, secret);
         const user = await this.em.findOneOrFail(User, { id: payload.id }, ['refreshTokens'])
         
-        if(!user.refreshTokens.getItems().find(rt => rt.token == token)){
+        const foundToken = !user.refreshTokens.getItems().find(rt => rt.token == token);
+        if(!foundToken){
             throw new UnauthorizedException('Unauthorized.');
         }
 
@@ -169,6 +171,16 @@ export default class UserServiceImpl implements UserService {
         user.refreshTokens.add(refreshToken);
 
         this.em.flush()
+    }
+
+    async removeToken(token: string, secret: string){
+        const jwtUser = verify(token, secret);
+        const user = await this.em.findOneOrFail(User, { id: jwtUser.id }, ['refreshTokens']);
+
+        const foundToken = user.refreshTokens.getItems().find((rt) => rt.token == token);
+        if(foundToken){
+            await this.em.remove(foundToken).flush();
+        }
     }
 
     static updateFields(user: { [name: string]: any }, fields: UpdateInput){
