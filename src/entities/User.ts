@@ -1,10 +1,11 @@
-import { Entity, PrimaryKey, Property, DateType } from "@mikro-orm/core";
-import { Field, ObjectType } from "type-graphql";
+import { Entity, PrimaryKey, Property, DateType, OneToMany, Collection } from "@mikro-orm/core";
+import { Field, ObjectType, Int } from "type-graphql";
+import RefreshToken from "./refresh-token";
 
 @Entity()
 @ObjectType()
 export default class User{
-    @Field()    
+    @Field(() => Int)    
     @PrimaryKey()
     id!: number
 
@@ -36,4 +37,7 @@ export default class User{
     @Field(() => String)
     @Property({ type: 'date' })
     age!: Date
+
+    @OneToMany(() => RefreshToken, r => r.owner)
+    refreshTokens = new Collection<RefreshToken>(this);
 }

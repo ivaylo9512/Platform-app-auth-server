@@ -1,7 +1,8 @@
 import { MikroORM, ReflectMetadataProvider } from '@mikro-orm/core';
 import 'reflect-metadata';
 import path from 'path';
-import User from './entities/User';
+import User from './entities/user';
+import RefreshToken from './entities/refresh-token';
 
 export default {
     migrations:{
@@ -12,7 +13,7 @@ export default {
     user: 'postgres',
     metadataProvider: ReflectMetadataProvider,
     password: '1234',
-    entities: [User],
+    entities: [User, RefreshToken],
     debug: process.env.NODE_ENV !== 'production',
     type: 'postgresql'
 } as Parameters<typeof MikroORM.init>[0];
