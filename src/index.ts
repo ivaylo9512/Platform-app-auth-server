@@ -39,15 +39,6 @@ const main = async () => {
         next();
     }, userRouter);
 
-    app.use((err, req, res, next) => {
-        if(err.message.includes('not found')){
-            res.status(404).send('Entity not found!');
-        }else{
-            err.status(500).send(err.message)
-        }
-    })
-
-
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
             resolvers: [UserResolver],
