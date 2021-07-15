@@ -1,6 +1,6 @@
 import UserInput from "../resolvers/types/login-input";
 import UserResponse from "../resolvers/types/user-response";
-import User from "../entities/User";
+import User from "../entities/user";
 import argon2 from 'argon2';
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import UserService from "./base/user-service";
@@ -10,6 +10,8 @@ import { v4 } from 'uuid';
 import { FORGOT_PASSWORD } from '../constants';
 import { Redis } from 'ioredis';
 import UpdateInput from "../resolvers/types/update-input";
+import { verify } from "jsonwebtoken";
+import RefreshToken from "../entities/refresh-token";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
@@ -74,7 +76,7 @@ export default class UserServiceImpl implements UserService {
         })
 
         try{
-            await this.em.persistAndFlush(user);
+            await this.em.persist(user).flush();
         }catch(err){
             if(err.code === '23505' || (err.detail && err.detail.includes('already exists'))){
                 if(err.detail.includes('email')){
@@ -119,6 +121,17 @@ export default class UserServiceImpl implements UserService {
             user
         };
     }
+    
+    async getUserFromToken(token: string, secret: string){
+        const payload = verify(token, secret);
+        const user = await this.em.findOneOrFail(User, { id: payload.id }, ['refreshTokens'])
+        
+        if(!user.refreshTokens.getItems().find(rt => rt.token == token)){
+            throw new UnauthorizedException('Unauthorized.');
+        }
+
+        return user;
+    }
 
     async delete(id: number): Promise<boolean>{
         //Todo check token id vs find userId or role admin
@@ -127,7 +140,7 @@ export default class UserServiceImpl implements UserService {
         if(!user){
             return false;
         }
-        this.em.removeAndFlush(user);
+        this.em.remove(user);
         return true;
     }
 
@@ -143,6 +156,19 @@ export default class UserServiceImpl implements UserService {
         await sendEmail(email, `<a href="http://localhost:3000/change-password/${token}>change password</a>`)
         
         return true;
+    }
+
+    addToken(user: User, token: string, expiryDays: number){
+        const date = new Date();
+        date.setDate(date.getDate() + expiryDays);
+
+        const refreshToken = this.em.create(RefreshToken, { 
+            token, 
+            expiresAt: date
+        })
+        user.refreshTokens.add(refreshToken);
+
+        this.em.flush()
     }
 
     static updateFields(user: { [name: string]: any }, fields: UpdateInput){
