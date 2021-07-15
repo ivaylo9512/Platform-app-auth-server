@@ -7,14 +7,14 @@ import RefreshToken from "./refresh-token";
 export default class User{
     @Field(() => Int)    
     @PrimaryKey()
-    id!: number
+    id!: number;
 
     @Field(() => String)
     @Property({ type: 'text', unique: true })
-    username!: string
+    username!: string;
 
     @Property({ type: 'text' })
-    password!: string
+    password!: string;
 
     @Property({ type: 'date' })
     createdAt = new Date();
@@ -24,19 +24,23 @@ export default class User{
 
     @Field(() => String)
     @Property({ type: 'text' })
-    firstName!: string
+    firstName!: string;
 
     @Field(() => String)
     @Property({ type: 'text' })
-    lastName!: string
+    lastName!: string;
 
     @Field(() => String)
     @Property({ type: 'text', unique: true })
-    email!: string
+    email!: string;
 
     @Field(() => String)
     @Property({ type: 'date' })
-    age!: Date
+    age!: Date;
+
+    @Field(() => String)
+    @Property({ type: 'text' })
+    role: string;
 
     @OneToMany(() => RefreshToken, r => r.owner)
     refreshTokens = new Collection<RefreshToken>(this);

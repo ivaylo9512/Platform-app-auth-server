@@ -1,7 +1,6 @@
-import { ObjectType, Field } from "type-graphql";
+import { ObjectType } from "type-graphql";
 import { PrimaryKey, ManyToOne, Entity, Property } from "@mikro-orm/core";
 import User from "./user";
-import { type } from "os";
 
 @Entity()
 @ObjectType()
@@ -9,6 +8,9 @@ export default class RefreshToken{
     @PrimaryKey()
     id: number;
     
+    @Property({ type: 'text' })
+    token: string;
+
     @ManyToOne({ entity: () => User })
     owner: User;
 
