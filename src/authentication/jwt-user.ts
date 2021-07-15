@@ -7,5 +7,4 @@ export class JwtUser {
         this.id = user.id;
         this.role = user.role
     }
-
 }
