@@ -6,7 +6,7 @@ import User from "src/entities/user";
 import { JwtUser } from "src/authentication/jwt-user";
 
 export default interface UserService  {
-    findById(id: number, loggedUser: JwtUser): Promise<UserResponse>;
+    findById(id: number, loggedUser: JwtUser): Promise<User>;
     login(userInput: UserInput): Promise<UserResponse>;
     register(registerInput: RegisterInput): Promise<UserResponse>;
     delete(id: number, loggedUser: JwtUser): Promise<boolean>;

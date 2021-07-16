@@ -1,8 +1,12 @@
-import { Resolver, Ctx, Arg, Mutation, Query } from 'type-graphql';
+import { Resolver, Ctx, Arg, Mutation, Query, Int } from 'type-graphql';
 import { ApolloContext } from "src/types";
 import UserResponse from './types/user-response';
 import UserInput from './types/login-input';
 import RegisterInput from './types/register-input';
+import { jwtSecret } from '../authentication/authenticate';
+import { verify } from 'jsonwebtoken';
+import UnauthorizedException from '../expceptions/unauthorized';
+import User from '../entities/user';
 
 @Resolver()
 export default class UserResolver{
@@ -14,12 +18,14 @@ export default class UserResolver{
         userService.forgotPassword(email);
     }
     
-    @Query(() => UserResponse)
-    async findById(
-        @Arg('id') id: number,
-        @Ctx() { services: { userService } }: ApolloContext
-    ): Promise<UserResponse> {
-        return await userService.findById(id);
+    @Query(() => User)
+    async userById(
+        @Arg('id', () => Int) id: number,
+        @Ctx() { services: { userService}, req }: ApolloContext
+    ): Promise<User> {
+        const loggedUser = UserResolver.getUserFromToken(req.headers?.authorization);
+        
+        return await userService.findById(id, loggedUser);
     }
 
     @Mutation(() => UserResponse)
@@ -36,5 +42,29 @@ export default class UserResolver{
         @Ctx() { services: { userService } }: ApolloContext
     ): Promise<UserResponse> {
         return await userService.register(registerInput);
+    }
+
+    @Mutation(() => Boolean)
+    async delete(
+        @Arg('id', () => Int) id: number,
+        @Ctx() { services: { userService }, req }: ApolloContext
+    ): Promise<boolean>{
+        const loggedUser = UserResolver.getUserFromToken(req.headers?.authorization);
+        
+        return await userService.delete(id, loggedUser)
+    }
+
+    static getUserFromToken(token?: string) {
+        if(!token){
+            throw new UnauthorizedException('Unauthorized');
+        }
+        token = token.split(' ')[1];
+    
+        const loggedUser = verify(token, jwtSecret);
+        if(!loggedUser){
+            throw new UnauthorizedException('Unauthorized')
+        }
+
+        return loggedUser;
     }
 }

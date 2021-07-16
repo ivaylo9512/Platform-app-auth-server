@@ -24,24 +24,12 @@ export default class UserServiceImpl implements UserService {
         this.redis = redis;
     }
         
-    async findById(id: number, loggedUser: JwtUser): Promise<UserResponse>{
+    async findById(id: number, loggedUser: JwtUser): Promise<User>{
         if(id != loggedUser.id && loggedUser.role != 'admin'){
             throw new UnauthorizedException('Unauthorized.');
         }
         
-        const user = await this.em.findOne(User, { id })
-        if(!user){
-            return{
-                errors:[{
-                    field: 'id',
-                    message: `User with id: ${id} doesn't exist.`
-                }]
-            }
-        }
-        //Todo check token id vs find userId or role admin
-        return {
-            user
-        }
+        return await this.em.findOneOrFail(User, { id });
     }
 
     async login(userInput: UserInput): Promise<UserResponse> {
