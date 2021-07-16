@@ -9,20 +9,35 @@ import { verifyUser } from "../authentication/jwt-strategy";
 
 const router = Router();
 
-router.get('/findById/:id', async(req: UserRequest, res) => {
-    res.send(await req.service?.findById(Number(req.params.id)));
+router.get('/findById/:id', verifyUser, async(req: UserRequest, res) => {
+    const loggedUser = req.user;
+    if(!loggedUser){
+        throw new UnauthorizedException('Unauthorized.');
+    }
+
+    res.send(await req.service?.findById(Number(req.params.id), loggedUser));
 })
 
-router.post('/create/', async(req: UserRequest, res) => {
+router.post('/create/', verifyUser, async(req: UserRequest, res) => {
     res.send(await req.service?.register(req.body));
 })
 
-router.patch('/update', async(req: UserRequest, res) => {
-    res.send(await req.service?.update(req.body));
+router.patch('/update', verifyUser, async(req: UserRequest, res) => {
+    const loggedUser = req.user;
+    if(!loggedUser){
+        throw new UnauthorizedException('Unauthorized.');
+    }
+
+    res.send(await req.service?.update(req.body, loggedUser));
 })
 
-router.delete('/delete/:id', async(req: UserRequest, res) => {
-    res.send(await req.service?.delete(Number(req.params.id)));
+router.delete('/delete/:id', verifyUser, async(req: UserRequest, res) => {
+    const loggedUser = req.user;
+    if(!loggedUser){
+        throw new UnauthorizedException('Unauthorized.');
+    }
+
+    res.send(await req.service?.delete(Number(req.params.id), loggedUser));
 })
 
 router.post('/login', async(req: UserRequest, res: Response) => {

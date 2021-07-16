@@ -13,6 +13,7 @@ import UpdateInput from "../resolvers/types/update-input";
 import { verify } from "jsonwebtoken";
 import RefreshToken from "../entities/refresh-token";
 import UnauthorizedException from "../expceptions/unauthorized";
+import { JwtUser } from "src/authentication/jwt-user";
 
 export default class UserServiceImpl implements UserService {
     em: EntityManager<any> & EntityManager<IDatabaseDriver<Connection>>;
@@ -23,7 +24,11 @@ export default class UserServiceImpl implements UserService {
         this.redis = redis;
     }
         
-    async findById(id: number): Promise<UserResponse>{
+    async findById(id: number, loggedUser: JwtUser): Promise<UserResponse>{
+        if(id != loggedUser.id && loggedUser.role != 'admin'){
+            throw new UnauthorizedException('Unauthorized.');
+        }
+        
         const user = await this.em.findOne(User, { id })
         if(!user){
             return{
@@ -103,9 +108,12 @@ export default class UserServiceImpl implements UserService {
         };
     }
 
-    async update(updateInput: UpdateInput): Promise<UserResponse>{
-        const user = await this.em.findOne(User, { id: updateInput.id });
+    async update(updateInput: UpdateInput, loggedUser: JwtUser): Promise<UserResponse>{
+        if(updateInput.id != loggedUser.id && loggedUser.role != 'admin'){
+            throw new UnauthorizedException('Unauthorized.');
+        }
 
+        const user = await this.em.findOne(User, { id: updateInput.id });
         if(!user){
             return{
                 errors: [{
@@ -135,14 +143,14 @@ export default class UserServiceImpl implements UserService {
         return user;
     }
 
-    async delete(id: number): Promise<boolean>{
-        //Todo check token id vs find userId or role admin
-
-        const user = await this.em.findOne(User, { id });
-        if(!user){
-            return false;
+    async delete(id: number, loggedUser: JwtUser): Promise<boolean>{
+        if(id != loggedUser.id && loggedUser.role != 'admin'){
+            throw new UnauthorizedException('Unauthorized');
         }
+        
+        const user = await this.em.findOneOrFail(User, { id });
         this.em.remove(user);
+
         return true;
     }
 

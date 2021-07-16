@@ -6,7 +6,7 @@ import RefreshToken from './entities/refresh-token';
 import EntitiyNotFoundException from './expceptions/enitity-not-found';
 
 export default {
-    findOneOrFailHandler: (entityName: string, where: Dictionary | IPrimaryKey) => new EntitiyNotFoundException(`${entityName} not found!`),
+    findOneOrFailHandler: (entityName: string, _: Dictionary | IPrimaryKey) => new EntitiyNotFoundException(`${entityName} not found!`),
     migrations:{
         path: path.join(__dirname, './migrations'),
         pattern: /^[\w-]+\d+\.[tj]s$/
