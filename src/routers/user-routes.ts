@@ -1,4 +1,4 @@
-import { Router, Response } from "express";
+import { Router, Response, ErrorRequestHandler  } from "express";
 import { UserRequest } from "src/types";
 import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../authentication/authenticate'
 import User from "../entities/user";
@@ -9,38 +9,42 @@ import { verifyUser } from "../authentication/jwt-strategy";
 
 const router = Router();
 
-router.get('/findById/:id', verifyUser, async(req: UserRequest, res) => {
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    res.status(err.status).send(err.message)
+}
+
+router.get('/findById/:id', verifyUser, async(req: UserRequest, res: Response) => {
     const loggedUser = req.user;
     if(!loggedUser){
         throw new UnauthorizedException('Unauthorized.');
     }
 
     res.send(await req.service?.findById(Number(req.params.id), loggedUser));
-})
+}, errorHandler)
 
-router.post('/create/', verifyUser, async(req: UserRequest, res) => {
+router.post('/create/', verifyUser, async(req: UserRequest, res: Response) => {
     res.send(await req.service?.register(req.body));
-})
+}, errorHandler)
 
-router.patch('/update', verifyUser, async(req: UserRequest, res) => {
+router.patch('/update', verifyUser, async(req: UserRequest, res: Response) => {
     const loggedUser = req.user;
     if(!loggedUser){
         throw new UnauthorizedException('Unauthorized.');
     }
 
     res.send(await req.service?.update(req.body, loggedUser));
-})
+}, errorHandler)
 
-router.delete('/delete/:id', verifyUser, async(req: UserRequest, res) => {
+router.delete('/delete/:id', verifyUser, async(req: UserRequest, res: Response) => {
     const loggedUser = req.user;
     if(!loggedUser){
         throw new UnauthorizedException('Unauthorized.');
     }
 
     res.send(await req.service?.delete(Number(req.params.id), loggedUser));
-})
+}, errorHandler)
 
-router.post('/login', async(req: UserRequest, res: Response) => {
+router.post('/login', async(req: UserRequest, res) => {
     const userResponse = await req.service?.login(req.body);
     const user = userResponse?.user;
 
