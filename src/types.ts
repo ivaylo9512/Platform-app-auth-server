@@ -15,6 +15,7 @@ export interface UserRequest extends Request{
 declare module 'jsonwebtoken' {
     function verify(token: string, secretOrPublicKey: Secret, options?: VerifyOptions): JwtUser;
 }
+
 declare global {
     namespace Express {
       interface User extends JwtUser{

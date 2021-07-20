@@ -2,7 +2,7 @@ import './utils/load-env'
 import 'reflect-metadata';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import mikroConfig from './mikro-orm.config';
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import UserResolver from './resolvers/User';
@@ -12,6 +12,7 @@ import UserServiceImpl from './services/user-service-impl';
 import { UserRequest } from './types';
 import userRouter from './routers/user-routes';
 import cookieParser from 'cookie-parser';
+import { verifyMiddleware } from './authentication/jwt-strategy';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
@@ -26,6 +27,8 @@ const main = async () => {
         credentials: true
     }))
 
+    verifyMiddleware(app);
+
     app.use(cookieParser(process.env.COOKIE_SECRET));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -38,6 +41,10 @@ const main = async () => {
         req.service = userService
         next();
     }, userRouter);
+
+    app.use(((err, req, res, next) => {
+        res.status(err.status).send(err.message);
+    }) as ErrorRequestHandler)
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
