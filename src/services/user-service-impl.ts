@@ -121,8 +121,12 @@ export default class UserServiceImpl implements UserService {
     
     async getUserFromToken(token: string, secret: string){
         const payload = verify(token, secret);
-        const user = await this.em.findOneOrFail(User, { id: payload.id }, ['refreshTokens'])
         
+        const user = await this.em.findOne(User, { id: payload.id }, ['refreshTokens'])
+        if(!user){
+            throw new UnauthorizedException('Unauthorized.');
+        }
+
         const foundToken = !user.refreshTokens.getItems().find(rt => rt.token == token);
         if(!foundToken){
             throw new UnauthorizedException('Unauthorized.');

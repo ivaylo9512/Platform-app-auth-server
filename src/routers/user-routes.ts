@@ -72,34 +72,23 @@ router.post('/register', async(req: UserRequest, res) => {
         setTokens(res, user, req);
     }
 
-    res.send(user);
+    res.send(userResponse);
 })
 
 router.get('/refreshToken', async(req: UserRequest, res) => {
     const { signedCookies: { refreshToken } } = req
+    
+    const user = await req.service!.getUserFromToken(refreshToken, refreshSecret);
 
-    if(refreshToken){
-        try {
-            const user = await req.service?.getUserFromToken(refreshToken, refreshSecret);
-            if(!user){
-                throw new UnauthorizedException('Unauthorized.');
-            }
-        
-            const token = getToken(user)
+    const token = getToken(user);
 
-            res.header('Access-Control-Expose-Headers', 'Authorization'); 
-            res.header('Authorization', token);
-        }catch(err){
-            throw new UnauthorizedException('Incorrect refresh token.');
-        }
-    }else{
-        throw new UnauthorizedException('Refresh token is missing.');
-    }
+    res.header('Access-Control-Expose-Headers', 'Authorization'); 
+    res.header('Authorization', token);
     
     res.send();
 })
 
-const setTokens = (res: Response, user: User, req: UserRequest) => {
+const setTokens = async (res: Response, user: User, req: UserRequest) => {
     const token = getToken(new JwtUser(user))
     const refreshToken = getRefreshToken(new JwtUser(user));
 
