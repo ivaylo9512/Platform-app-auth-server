@@ -3,7 +3,7 @@ import { ApolloContext } from "src/types";
 import UserResponse from './types/user-response';
 import UserInput from './types/login-input';
 import RegisterInput from './types/register-input';
-import { jwtSecret } from '../authentication/authenticate';
+import { jwtSecret } from '../authentication/jwt';
 import { verify } from 'jsonwebtoken';
 import UnauthorizedException from '../expceptions/unauthorized';
 import User from '../entities/user';

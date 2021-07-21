@@ -33,11 +33,13 @@ export default class UserServiceImpl implements UserService {
     }
 
     async login(userInput: UserInput): Promise<UserResponse> {
-        const user = await this.em.findOne(User,  userInput.username ? 
-            { username: userInput.username } : { email: userInput.email } 
+        let { username, password, email } = userInput; 
+
+        const user = await this.em.findOne(User,  username ? 
+            { username } : { email } 
         )
         
-        if(!user || !await argon2.verify(user.password, userInput.password)) {
+        if(!user || !await argon2.verify(user.password, password)) {
             return {
                 errors: [{
                     field: 'login',
@@ -160,7 +162,7 @@ export default class UserServiceImpl implements UserService {
         return true;
     }
 
-    addToken(user: User, token: string, expiryDays: number){
+    async addToken(user: User, token: string, expiryDays: number){
         const date = new Date();
         date.setDate(date.getDate() + expiryDays);
 
@@ -170,7 +172,7 @@ export default class UserServiceImpl implements UserService {
         })
         user.refreshTokens.add(refreshToken);
 
-        this.em.flush()
+        await this.em.flush()
     }
 
     async removeToken(token: string, secret: string){

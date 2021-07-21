@@ -12,7 +12,7 @@ import UserServiceImpl from './services/user-service-impl';
 import { UserRequest } from './types';
 import userRouter from './routers/user-routes';
 import cookieParser from 'cookie-parser';
-import { verifyMiddleware } from './authentication/jwt-strategy';
+import { verifyMiddleware } from './authentication/authenticate';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)

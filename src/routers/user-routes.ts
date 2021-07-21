@@ -1,8 +1,8 @@
 import { Router, Response, ErrorRequestHandler  } from "express";
 import { UserRequest } from "src/types";
-import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../authentication/authenticate'
+import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../authentication/jwt'
 import User from "../entities/user";
-import { refreshSecret } from "../authentication/authenticate";
+import { refreshSecret } from "../authentication/jwt";
 import { JwtUser } from "../authentication/jwt-user";
 import UnauthorizedException from "../expceptions/unauthorized";
 
@@ -84,7 +84,7 @@ const setTokens = async (res: Response, user: User, req: UserRequest) => {
     const token = getToken(new JwtUser(user))
     const refreshToken = getRefreshToken(new JwtUser(user));
 
-    req.service?.addToken(user, refreshToken, refreshExpiry / 60 / 60 / 24)
+    await req.service?.addToken(user, refreshToken, refreshExpiry / 60 / 60 / 24)
 
     res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
     res.header('Access-Control-Expose-Headers', 'Authorization'); 

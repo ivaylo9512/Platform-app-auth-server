@@ -1,28 +1,26 @@
-import { sign }  from 'jsonwebtoken';
-import { CookieOptions } from 'express';
-import { DEFAULT_REFRESH_EXPIRY, DEFAULT_JWT_EXPIRY } from '../constants';
-import { JwtUser } from './jwt-user';
+import { ExtractJwt, Strategy} from 'passport-jwt'
+import { jwtSecret } from './jwt'
+import { use, authenticate } from 'passport'
+import { Express } from 'express'
 
-export const refreshSecret = process.env.REFRESH_TOKEN_SECRET!;
-export const jwtSecret = process.env.JWT_SECRET!;
-export const refreshExpiry = eval(process.env.REFRESH_TOKEN_EXPIRY || DEFAULT_REFRESH_EXPIRY);
-const jwtExpiry = eval(process.env.JWT_EXPIRY || DEFAULT_JWT_EXPIRY);
-
-if(typeof jwtSecret === 'undefined' || typeof refreshSecret === 'undefined'){
-    throw new Error('Refresh or jwt secrets are missing.');
+const opts = {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: jwtSecret
 }
-export const COOKIE_OPTIONS: CookieOptions = {
-    httpOnly: true,
-    secure: true,
-    signed: true,
-    maxAge: refreshExpiry * 1000,
-    sameSite: "none",
-}
-export const getToken = (user: JwtUser): string => sign({...user}, 
-    jwtSecret, {
-        expiresIn: jwtExpiry,
+const strategy = new Strategy(opts, (payload, done) => {
+    return done(null, {
+        id: payload.id,
+        role: payload.role
+    });
 })
-export const getRefreshToken = (user: JwtUser): string => sign({...user}, 
-    refreshSecret, {
-        expiresIn: refreshExpiry
-})
+use(strategy);
+export const verifyMiddleware = (app: Express) => 
+    app.use('**/auth', (req, res, next) => 
+        authenticate(strategy, { session: false  }, (error, user, info, status) => {
+            if(info){
+                return res.status(401).send(info.message);
+            }
+            
+            req.user = user;
+            return next();
+    }))
