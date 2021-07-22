@@ -1,5 +1,5 @@
 import RegisterInput from "../resolvers/types/register-input";
-import validateEmail from "./validateEmail";
+import validateEmail from "./validate-email";
 
 const validateRegister = (registerInput : RegisterInput) => {
     if(!registerInput.email || !validateEmail(registerInput.email)){

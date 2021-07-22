@@ -4,7 +4,7 @@ import User from "../entities/user";
 import argon2 from 'argon2';
 import { EntityManager, IDatabaseDriver, Connection } from "@mikro-orm/core";
 import UserService from "./base/user-service";
-import validateRegister from "../utils/validateRegister";
+import validateRegister from "../utils/validate-register";
 import RegisterInput from "../resolvers/types/register-input";
 import { v4 } from 'uuid';
 import { FORGOT_PASSWORD } from '../constants';
