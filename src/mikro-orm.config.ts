@@ -9,9 +9,10 @@ export default {
     findOneOrFailHandler: (entityName: string, _: Dictionary | IPrimaryKey) => new EntitiyNotFoundException(`${entityName} not found!`),
     migrations:{
         path: path.join(__dirname, './migrations'),
-        pattern: /^[\w-]+\d+\.[tj]s$/
+        pattern: /^[\w-]+\d+\.[tj]s$/,
+        dropTables: process.env.NODE_ENV === 'test',
     },
-    dbName: 'platform-auth',
+    dbName: process.env.NODE_ENV === 'test' ? 'platform-auth-test' : 'platform-auth',
     user: 'postgres',
     metadataProvider: ReflectMetadataProvider,
     password: '1234',

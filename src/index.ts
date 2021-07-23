@@ -16,8 +16,12 @@ import { verifyMiddleware } from './authentication/authenticate';
 
 const main = async () => {
     const orm = await MikroORM.init(mikroConfig)
-    await orm.getMigrator().up();
     
+    if(process.env.NODE_ENV === 'test'){
+        await orm.getSchemaGenerator().dropSchema(undefined, true);
+    }
+    await orm.getMigrator().up();
+
     const redis = new Redis();
     const userService = new UserServiceImpl(orm.em, redis);
 
@@ -33,16 +37,16 @@ const main = async () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    app.use((req, res, next) => {
+    app.use((_req, _res, next) => {
         RequestContext.create(orm.em, next);
     });
 
-    app.use('/users', (req: UserRequest, res, next) => {
+    app.use('/users', (req: UserRequest, _res, next) => {
         req.service = userService
         next();
     }, userRouter);
 
-    app.use(((err, req, res, next) => {
+    app.use(((err, _req, res, next) => {
         res.status(err.status).send(err.message);
     }) as ErrorRequestHandler)
 
