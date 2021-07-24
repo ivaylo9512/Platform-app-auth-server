@@ -9,15 +9,15 @@ import UserResolver from './resolvers/User';
 import cors from 'cors';
 import Redis from 'ioredis';
 import UserServiceImpl from './services/user-service-impl';
-import { UserRequest } from './types';
 import userRouter from './routers/user-routes';
 import cookieParser from 'cookie-parser';
 import { verifyMiddleware } from './authentication/authenticate';
 
 export const NODE_ENV = process.env.NODE_ENV;
+
 export const initialize = async () => {
     const orm = await MikroORM.init(mikroConfig)
-    
+
     if(NODE_ENV === 'test'){
         await orm.getSchemaGenerator().dropSchema(undefined, true);
     }
@@ -42,16 +42,16 @@ export const initialize = async () => {
         RequestContext.create(orm.em, next);
     });
 
-    app.use('/users', (req: UserRequest, _res, next) => {
+    app.use('/users', (req, _res, next) => {
         req.service = userService
         next();
     }, userRouter);
 
-    app.use(((err, _req, res, next) => {
+    app.use(((err, _req, res, _next) => {
         res.status(err.status).send(err.message);
     }) as ErrorRequestHandler)
 
-    const apolloServer = new ApolloServer({
+    const server = new ApolloServer({
         schema: await buildSchema({
             resolvers: [UserResolver],
             validate: false
@@ -59,7 +59,11 @@ export const initialize = async () => {
         context: ({req, res}) => ({ services: { userService }, req, res }) 
     })
 
-    apolloServer.applyMiddleware({ app });
+    server.applyMiddleware({ app });
 
-    return app;
+    return {
+        app, 
+        orm, 
+        server
+    };
 }

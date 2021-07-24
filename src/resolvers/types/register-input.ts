@@ -13,5 +13,5 @@ export default class RegisterInput {
     @Field()
     email: string
     @Field()
-    age: Date
+    age: number
 }
