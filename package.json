@@ -48,6 +48,7 @@
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "express": "^5",
+    "express-validator": "^6.12.1",
     "graphql": "^15.5.1",
     "ioredis": "^4.27.6",
     "jsonwebtoken": "^8.5.1",
