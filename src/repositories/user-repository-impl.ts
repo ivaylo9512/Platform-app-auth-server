@@ -2,12 +2,15 @@ import UserRepository from "./base/user-repository";
 import User from "src/entities/user";
 import { EntityRepository } from "@mikro-orm/mysql";
 import { Repository } from "@mikro-orm/core";
-import { timingSafeEqual } from "crypto";
 
 @Repository(User)
-export class UserRepositoryImpl extends EntityRepository<User> implements UserRepository{
-    async findById(id: number){
-        return this.findOne({ id });
+export default class UserRepositoryImpl extends EntityRepository<User> implements UserRepository{
+    async findById(id: number, selections?: string[]){
+        return this.findOneOrFail({ id }, selections);
+    }
+
+    async findUser(user: any){
+        return this.findOne(user);
     }
 
     async findByUsernameOrEmail(username: string, email: string){
@@ -38,6 +41,4 @@ export class UserRepositoryImpl extends EntityRepository<User> implements UserRe
     async deleteById(id: number){
         return await this.nativeDelete({ id })
     }
-
-
 }

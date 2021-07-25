@@ -1,7 +1,9 @@
 import User from "src/entities/user";
+import UserInput from "src/resolvers/types/login-input";
 
 export default interface UserRepository {
-    findById(id: number): Promise<User | null>;
+    findById(id: number, selections?: string[]): Promise<User>;
+    findUser(user: UserInput): Promise<User | null>
     delete(user: User): Promise<boolean>;
     deleteById(id: number): Promise<number>;
     update(user: User): Promise<number>;
