@@ -1,8 +1,10 @@
 import User from "src/entities/user";
 
 export default interface UserRepository {
-    findById(id: number): Promise<User>;
-    delete(id: number): Promise<boolean>;
-    update(user: User): Promise<User>;
-    create(user: User): Promise<User | User[]>;
+    findById(id: number): Promise<User | null>;
+    delete(user: User): Promise<boolean>;
+    deleteById(id: number): Promise<number>;
+    update(user: User): Promise<number>;
+    save(user: User): Promise<User | User[]>;
+    findByUsernameOrEmail(username: string, email: string): Promise<User>
 }
