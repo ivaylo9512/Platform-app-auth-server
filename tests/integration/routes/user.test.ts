@@ -187,4 +187,193 @@ describe('user route tests', () => {
         
             expect(res.body).toEqual(secondUser);
     })
+
+    it('should login user with email', async() => {
+        const res = await request(app)
+            .post('/users/login')
+            .set('Content-Type', 'Application/json')
+            .send({
+                email: thirdUser.email,
+                password: 'testUserPassword2'
+            })
+            .expect(200);
+
+            expect(res.body).toEqual(thirdUser);
+    })
+
+    it('should login user with email', async() => {
+        const res = await request(app)
+            .post('/users/login')
+            .set('Content-Type', 'Application/json')
+            .send({
+                email: forthUser.email,
+                password: 'testUserPassword3'
+            })
+            .expect(200);
+
+            forthToken = 'Bearer ' + res.get('Authorization');
+            expect(res.body).toEqual(forthUser);
+    })
+
+    it('should get token', async() => {
+        const res = await request(app)
+            .get('/users/refreshToken')
+            .set('Cookie', `refreshToken=${refreshToken}`)
+            expect(200);
+            
+            expect(res.get('Authorization')).toBeDefined();
+    })
+
+    it('should return 401 when login user with wrong password', async() => {
+        const res = await request(app)
+            .post('/users/login')
+            .set('Content-Type', 'Application/json')
+            .send({
+                email: secondUser.email,
+                password: 'wrongPassword'
+            })
+            .expect(401);
+
+            expect(res.text).toBe('Incorrect username, pasword or email.');
+    })
+
+    it('should return firstUser when findById with id 1', async() => {
+        const res = await request(app)
+            .get('/users/findById/1')
+            .expect(200);
+
+            expect(res.body).toEqual(firstUser);
+    })
+
+    it('should return 404 when findById with nonexistent id', async() => {
+        const res = await request(app)
+            .get('/users/findById/252')
+            .expect(404);
+
+            expect(res.text).toBe('Could not find any entity of type "User" matching: {\n    "id": 252\n}');
+    })
+
+    it('should return 401 when updating user from another loggedUser that is not admin: role', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', secondToken)
+            .send(updatedFirstUser)
+            .expect(401);
+
+            expect(res.text).toBe('Unauthorized.');
+    })
+
+    it('should update user when updating with same logged user id', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', firstToken)
+            .send(updatedFirstUser)
+            .expect(200);
+
+            expect(res.body).toEqual(updatedFirstUser);
+    })
+
+    it('should update user when updating with logged user with role: admin', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send(updatedSecondUser)
+            .expect(200);
+
+            expect(res.body).toEqual(updatedSecondUser);
+    })
+
+    it('should return 401 when deleting user from another loggedUser that is not admin: role', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/1')
+            .set('Authorization', secondToken)
+            .expect(401);
+
+            expect(res.text).toBe('Unauthorized.');
+    })
+
+    it('should delete user when deleting with same logged user id', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/4')
+            .set('Authorization', forthToken)
+            expect(200)
+
+            expect(res.body).toBe(true);
+    })
+
+    it('should delete user when deleting with logged user with role: admin', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/3')
+            .set('Authorization', adminToken)
+            .expect(200);
+
+            expect(res.body).toBe(true);
+    })
+
+    it('should return false when deleting nonexistent user', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/4')
+            .set('Authorization', forthToken)
+            .expect(200);
+
+            expect(res.body).toBe(false);
+    })
+
+    it('should return 404 when updating nonexistent user', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', forthToken)
+            .send(forthUser)
+            .expect(404);
+
+            expect(res.text).toBe(`Could not find any entity of type "User" matching: {\n    "id": ${forthUser.id}\n}`);
+    })
+
+    it('should return 422 when creating users with wrong input', async() => {
+        const error = { users0: {
+            email: 'Must be a valid email.',
+            password: 'Password must be between 10 and 22 characters',
+            username: 'Username must be between 8 and 20 characters',
+            name: 'You must provide a name.',
+            location: 'You must provide a location.',
+            description: 'You must provide a description.',
+            role: 'You must provide a role.'
+          }
+        }
+
+        const res = await request(app)
+            .post('/users/auth/create')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send({
+                users: [{}]
+            })
+            .expect(422);
+
+            expect(res.body).toEqual(error);
+    })
+
+    it('should return 422 when creating users with usernames that are already in use.', async() => {
+        const error = {
+            user0: { username: 'User with given username or email already exists.'}, 
+            user1: {username: 'User with given username or email already exists.'}
+        }
+        const firstUser = {...updatedFirstUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
+        const secondUser = {...updatedSecondUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
+
+        const res = await request(app)
+            .post('/users/auth/create')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send({
+                users: [firstUser, secondUser]
+            })
+            .expect(422);
+
+            expect(res.body).toEqual(error)
+    })
 })
