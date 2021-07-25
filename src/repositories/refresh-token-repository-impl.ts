@@ -1,5 +1,5 @@
 import { EntityRepository } from "@mikro-orm/mysql";
-import { Repository } from "@mikro-orm/core";
+import { Repository, EntityData } from "@mikro-orm/core";
 import RefreshToken from "src/entities/refresh-token";
 import RefreshTokenRepository from "./base/refresh-token-repository";
 
@@ -13,15 +13,15 @@ export default class RefreshTokenRepositoryImpl extends EntityRepository<Refresh
         return await this.nativeUpdate({id: refreshToken.id}, refreshToken);
     }
 
-    async save(refreshToken: RefreshToken){
-        refreshToken = this.create(refreshToken);
+    async save(refreshTokenInput: EntityData<RefreshToken>){
+        const refreshToken = this.create(refreshTokenInput);
         this.persist(refreshToken);
         
         return refreshToken;
     }
 
-    async delete(user: RefreshToken){
-        await this.remove(user);
+    async delete(refreshToken: RefreshToken){
+        await this.remove(refreshToken);
 
         return true;
     }
