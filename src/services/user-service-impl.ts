@@ -35,7 +35,7 @@ export default class UserServiceImpl implements UserService {
         return await this.repo.findByUsernameOrEmail(username, email)
     }
 
-    async login(userInput: UserInput): Promise<User> {
+    async login(userInput: UserInput){
         let { username, password, email } = userInput; 
 
         const user = await this.repo.findUser(username ? 
@@ -48,11 +48,11 @@ export default class UserServiceImpl implements UserService {
         return user
     }
 
-    async register(registerInput: RegisterInput): Promise<User>{
+    async register(registerInput: RegisterInput){
         let { username, password, firstName, lastName, age, email } =  registerInput;
 
         password = await argon2.hash(password);
-        const user = this.repo.create({ 
+        const user = await this.repo.save({ 
             username, 
             password,
             firstName, 
@@ -66,7 +66,7 @@ export default class UserServiceImpl implements UserService {
         return user;
     }
 
-    async update(updateInput: UpdateInput, foundUser: User): Promise<User>{
+    async update(updateInput: UpdateInput, foundUser: User){
         let { username, firstName, lastName, age, email } =  updateInput;
 
         foundUser.username = username;
@@ -75,6 +75,7 @@ export default class UserServiceImpl implements UserService {
         foundUser.age = age;
         foundUser.email = email;
 
+        await this.repo.update(foundUser);
         await this.repo.flush();
 
         return foundUser;
@@ -84,27 +85,23 @@ export default class UserServiceImpl implements UserService {
         const payload = verify(token, secret);
         
         const user = await this.repo.findOne({ id: payload.id }, ['refreshTokens'])
-        if(!user){
-            throw new UnauthorizedException('Unauthorized.');
-        }
+        const foundToken = !user?.refreshTokens.getItems().find(rt => rt.token == token);
 
-        const foundToken = !user.refreshTokens.getItems().find(rt => rt.token == token);
-        if(!foundToken){
+        if(!user || !foundToken){
             throw new UnauthorizedException('Unauthorized.');
         }
 
         return user;
     }
 
-    async delete(id: number, loggedUser: JwtUser): Promise<boolean>{
+    async delete(id: number, loggedUser: JwtUser){
         if(id != loggedUser.id && loggedUser.role != 'admin'){
-            throw new UnauthorizedException('Unauthorized');
+            throw new UnauthorizedException('Unauthorized.');
         }
         
-        const user = await this.repo.findById(id);
-        this.repo.remove(user);
+        const result = await this.repo.deleteById(id);
 
-        return true;
+        return !!result;
     }
 
     async forgotPassword(email: string){
@@ -121,10 +118,7 @@ export default class UserServiceImpl implements UserService {
         return true;
     }
 
-    async addToken(user: User, refreshToken: RefreshToken, expiryDays: number){
-        const date = new Date();
-        date.setDate(date.getDate() + expiryDays);
-
+    async addToken(user: User, refreshToken: RefreshToken){
         user.refreshTokens.add(refreshToken);
 
         await this.repo.flush()

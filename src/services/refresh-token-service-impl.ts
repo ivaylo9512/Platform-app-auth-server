@@ -1,14 +1,17 @@
 import RefreshTokenService from "./base/refresh-token-service";
-import RefreshTokenRepositoryImpl from "src/repositories/refresh-token-repository-impl";
-import UnauthorizedException from "src/expceptions/unauthorized";
-import User from "src/entities/user";
-import RefreshToken from "src/entities/refresh-token";
+import RefreshTokenRepositoryImpl from "../repositories/refresh-token-repository-impl";
+import UnauthorizedException from "../expceptions/unauthorized";
+import User from "../entities/user";
+import RefreshToken from "../entities/refresh-token";
+import { refreshExpiry } from "../authentication/jwt";
 
 export default class RefreshTokenServiceImpl implements RefreshTokenService{
     repo: RefreshTokenRepositoryImpl;
+    expiryDays: number;
 
     constructor(repo: RefreshTokenRepositoryImpl){
         this.repo = repo;
+        this.expiryDays = refreshExpiry / 60 / 60 / 24
     }
     
     async findById(id: number, loggedUser: User){
@@ -21,8 +24,11 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
         return refreshToken;
     }
 
-    async create(token: string, owner: User){
-        return this.repo.create({ token, owner });
+    create(token: string, owner: User){
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + this.expiryDays);
+
+        return this.repo.create({ token, owner,  expiresAt });
     }
 
     async save(token: string, owner: User){
