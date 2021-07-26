@@ -19,6 +19,10 @@ router.get('/auth/findById/:id', async(req: UserRequest, res: Response) => {
     res.send(new UserDto(await req.userService!.findById(Number(req.params.id), loggedUser)));
 })
 
+router.get('/findByUsername/:username', async(req: UserRequest, res: Response) => {
+    res.send(new UserDto(await req.userService!.findByUsername(req.params.username)));
+})
+
 router.patch('/auth/update', updateValidatorRules, updateValidator, async(req: UserRequest, res: Response) => {
     res.send(new UserDto(await req.userService!.update(req.body, req.foundUser!)));
 })

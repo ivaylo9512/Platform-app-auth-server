@@ -3,6 +3,7 @@ import { EntityData } from "@mikro-orm/core";
 
 export default interface UserRepository {
     findById(id: number, selections?: string[]): Promise<User>;
+    findByUsername(username: string): Promise<User>;
     findUser(user: EntityData<User>): Promise<User | null>
     delete(user: User): Promise<boolean>;
     deleteById(id: number): Promise<number>;

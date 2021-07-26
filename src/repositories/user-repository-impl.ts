@@ -8,6 +8,10 @@ export default class UserRepositoryImpl extends EntityRepository<User> implement
         return this.findOneOrFail({ id }, selections);
     }
 
+    async findByUsername(username: string){
+        return this.findOneOrFail({ username });
+    }
+
     async findUser(user: EntityData<User>){
         return this.findOne(user);
     }
