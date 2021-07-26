@@ -35,7 +35,7 @@ export const [updatedFirstUser, updatedSecondUser]: User[] = Array.from({length:
 }))
 
 export const adminToken = 'Bearer ' + getToken({
-    id: 3, 
+    id: 5, 
     role: 'admin'
 })
 
@@ -334,15 +334,15 @@ describe('user route tests', () => {
             email: 'Must be a valid email.',
             password: 'Password must be between 10 and 22 characters',
             username: 'Username must be between 8 and 20 characters',
-            name: 'You must provide a name.',
-            location: 'You must provide a location.',
-            description: 'You must provide a description.',
+            age: 'You must provide a age.',
+            firstName: 'You must provide a firstName.',
+            lastName: 'You must provide a lastName.',
             role: 'You must provide a role.'
           }
         }
 
         const res = await request(app)
-            .post('/users/auth/create')
+            .post('/users/auth/createMany')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
             .send({
@@ -362,14 +362,117 @@ describe('user route tests', () => {
         const secondUser = {...updatedSecondUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
 
         const res = await request(app)
-            .post('/users/auth/create')
+            .post('/users/auth/createMany')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send({
+                users: [firstUser, secondUser]
+            })
+
+        expect(res.body).toEqual(error)
+    })
+
+    it('should return 422 when creating users with emails that are already in use.', async() => {
+        const error = {
+            user0: { username: 'User with given username or email already exists.'}, 
+            user1: {username: 'User with given username or email already exists.'}
+        }
+        const firstUser = {...updatedFirstUser, username: 'uniqueUsername', password: 'testPassword'};
+        const secondUser = {...updatedSecondUser, username: 'uniqueUsername1', password: 'testPassword'};
+
+        const res = await request(app)
+            .post('/users/auth/createMany')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
             .send({
                 users: [firstUser, secondUser]
             })
             .expect(422);
+            
+        expect(res.body).toEqual(error);
+    })
 
-        expect(res.body).toEqual(error)
+    it('should return 422 when updating user with invalid input.', async() => {
+        const error = {
+            id: 'You must provide an id.', 
+            email: 'Must be a valid email.', 
+            username: 'Username must be between 8 and 20 characters', 
+            age: 'You must provide a age.', 
+            firstName: 'You must provide a firstName.', 
+            lastName: 'You must provide a lastName.'
+        }
+
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send({})
+            .expect(422);
+
+        expect(res.body).toEqual(error);
+    })
+
+        it('should return 422 when updating user with invalid input.', async() => {
+        const error = {
+            id: 'You must provide id as a whole number.', 
+            email: 'Must be a valid email.', 
+            username: 'Username must be between 8 and 20 characters', 
+            age: 'You must provide a age.', 
+            firstName: 'You must provide a firstName.', 
+            lastName: 'You must provide a lastName.'
+        }
+
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send({id: 'invalid'})
+            .expect(422);
+
+        expect(res.body).toEqual(error);
+    })
+
+    it('should return 422 when updating user with username that is in use.', async() => {
+        const user = {...updatedFirstUser, username: updatedSecondUser.username}
+        const error = {username: 'Username or email is already in use.'};
+        
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', firstToken)
+            .send(user)
+            .expect(422);
+
+        expect(res.body).toEqual(error);
+    })
+
+    it('should return 422 when updating user with email that is in use.', async() => {
+        const user = {...updatedFirstUser, email: updatedSecondUser.email}
+        const error = {username: 'Username or email is already in use.'};
+
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', firstToken)
+            .send(user)
+            .expect(422);
+
+        expect(res.body).toEqual(error);
+    })
+
+    it('should return user when findByUsername', async() => {
+        const res = await request(app)
+            .get('/users/findByUsername/' + updatedFirstUser.username)
+            .expect(200);
+
+        expect(res.body).toEqual(updatedFirstUser)
+    })
+
+    it('should return 404 when findByUsername with nonexistent username', async() => {
+        const res = await request(app)
+            .get('/users/findByUsername/nonExistent')
+            .expect(404);
+
+        expect(res.text).toEqual('Could not find any entity of type "User" matching: {\n    "username": "nonExistent"\n}')
     })
 })
