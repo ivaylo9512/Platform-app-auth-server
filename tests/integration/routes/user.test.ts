@@ -494,4 +494,59 @@ describe('user route tests', () => {
 
         expect(res.text).toEqual('User not found.')
     })
+
+    it('should return 401 when deleting user wtihout token', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/1')
+            .expect(401);
+
+        expect(res.text).toBe('No auth token');
+    })
+
+    it('should return 401 when deleting user with incorrect token', async() => {
+        const res = await request(app)
+            .delete('/users/auth/delete/1')
+            .set('Authorization', 'Bearer incorrect token')
+            .expect(401);
+
+        expect(res.text).toBe('jwt malformed');
+    })
+
+    it('should return 401 when updating user wtihout token', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .expect(401);
+
+        expect(res.text).toBe('No auth token');
+    })
+
+    it('should return 401 when updating user with incorrect token', async() => {
+        const res = await request(app)
+            .patch('/users/auth/update')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', 'Bearer incorrect token')
+            .expect(401);
+
+        expect(res.text).toBe('jwt malformed');
+    })
+
+    it('should return 401 when creating user wtihout token', async() => {
+        const res = await request(app)
+            .post('/users/auth/create')
+            .set('Content-Type', 'Application/json')
+            .expect(401);
+
+        expect(res.text).toBe('No auth token');
+    })
+
+    it('should return 401 when creating user with incorrect token', async() => {
+        const res = await request(app)
+            .post('/users/auth/create')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', 'Bearer incorrect token')
+            .expect(401);
+
+        expect(res.text).toBe('jwt malformed');
+    })
 })
