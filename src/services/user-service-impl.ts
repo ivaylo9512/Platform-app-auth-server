@@ -66,6 +66,23 @@ export default class UserServiceImpl implements UserService {
         return user;
     }
 
+    async createMany(usersInputs: RegisterInput[]){
+        const users = await Promise.all(usersInputs.map(async({ username, password, firstName, lastName, age, email, role }) => this.repo.create({
+            username,
+            password: await argon2.hash(password),
+            firstName,
+            lastName,
+            age,
+            email,
+            role
+        })));
+
+        await this.repo.persist(users);
+        await this.repo.flush();
+
+        return users;
+    }
+
     async update(updateInput: UpdateInput, foundUser: User){
         let { username, firstName, lastName, age, email } =  updateInput;
 

@@ -1,35 +1,44 @@
 import UserRepository from "./base/user-repository";
-import User from "src/entities/user";
+import User from "../entities/user";
 import { EntityRepository } from "@mikro-orm/mysql";
-import { Repository } from "@mikro-orm/core";
+import { Repository, EntityData } from "@mikro-orm/core";
 
-@Repository(User)
 export default class UserRepositoryImpl extends EntityRepository<User> implements UserRepository{
     async findById(id: number, selections?: string[]){
         return this.findOneOrFail({ id }, selections);
     }
 
-    async findUser(user: any){
+    async findUser(user: EntityData<User>){
         return this.findOne(user);
     }
 
     async findByUsernameOrEmail(username: string, email: string){
         return this.createQueryBuilder('user')
             .select('*')
-            .where(`user.username = ${username} or user.username = ${email}`)
-            .execute();
-
+            .where(`username = ?  or email = ?`, [username, email])
+            .getResult();
     }
 
     async update(user: User){
+        return await this.save(user);
+    }
+
+    async updateById(user: User){
         return await this.nativeUpdate({id: user.id}, user);
     }
 
-    async save(user: User){
-        user = this.create(user);
-        this.persist(user);
+    async save(userInput: EntityData<User>){
+        const user = this.create(userInput);
+        await this.persist(user);
         
         return user;
+    }
+
+    async saveMany(usersInput: EntityData<User[]>){
+        const users = usersInput.map(user => this.create(user));
+        await this.persist(users);
+        
+        return users;
     }
 
     async delete(user: User){
