@@ -112,6 +112,25 @@ describe('user route tests', () => {
         expect(res.body).toEqual(errors);
     })
 
+    it('should retrun 422 when register user with invalid fields', async() => {
+        const errors = {
+            email: "Must be a valid email.", 
+            password: "Password must be between 10 and 22 characters",
+            username: "Username must be between 8 and 20 characters", 
+            age: "You must provide age as a whole number.", 
+            firstName: "You must provide a firstName.", 
+            lastName: "You must provide a lastName."
+        }
+
+        const res = await request(app)
+            .post('/users/register')
+            .set('Content-Type', 'Application/json')
+            .send({age: 'text'})
+            .expect(422);
+
+        expect(res.body).toEqual(errors);
+    })
+
     it('should create users when logged user is admin', async() => {
         const adminUser = {
             ...secondUser, 
@@ -334,7 +353,7 @@ describe('user route tests', () => {
             email: 'Must be a valid email.',
             password: 'Password must be between 10 and 22 characters',
             username: 'Username must be between 8 and 20 characters',
-            age: 'You must provide a age.',
+            age: 'You must provide age.',
             firstName: 'You must provide a firstName.',
             lastName: 'You must provide a lastName.',
             role: 'You must provide a role.'
@@ -397,7 +416,7 @@ describe('user route tests', () => {
             id: 'You must provide an id.', 
             email: 'Must be a valid email.', 
             username: 'Username must be between 8 and 20 characters', 
-            age: 'You must provide a age.', 
+            age: 'You must provide age.', 
             firstName: 'You must provide a firstName.', 
             lastName: 'You must provide a lastName.'
         }
@@ -417,7 +436,7 @@ describe('user route tests', () => {
             id: 'You must provide id as a whole number.', 
             email: 'Must be a valid email.', 
             username: 'Username must be between 8 and 20 characters', 
-            age: 'You must provide a age.', 
+            age: 'You must provide age.', 
             firstName: 'You must provide a firstName.', 
             lastName: 'You must provide a lastName.'
         }
@@ -473,6 +492,6 @@ describe('user route tests', () => {
             .get('/users/findByUsername/nonExistent')
             .expect(404);
 
-        expect(res.text).toEqual('Could not find any entity of type "User" matching: {\n    "username": "nonExistent"\n}')
+        expect(res.text).toEqual('User not found.')
     })
 })

@@ -10,7 +10,7 @@ const validateRegister = async(req: UserRequest) => await Promise.all(
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('age', 'You must provide age.').notEmpty().run(req)
+    check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
 ])
 
 const validateCreate = async(req: UserRequest) => await Promise.all([
@@ -19,7 +19,7 @@ const validateCreate = async(req: UserRequest) => await Promise.all([
     check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('users.*.firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('users.*.lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('users.*.age', 'You must provide a age.').notEmpty().run(req),
+    check('users.*.age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
     check('users.*.role', 'You must provide a role.').notEmpty().run(req),
 ])
 
@@ -29,7 +29,7 @@ const validateUpdate = async(req: UserRequest) => await Promise.all([
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('age', 'You must provide a age.').notEmpty().run(req),
+    check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
 ])
 
 export const registerValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
