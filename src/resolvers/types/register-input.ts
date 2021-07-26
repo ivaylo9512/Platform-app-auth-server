@@ -14,4 +14,6 @@ export default class RegisterInput {
     email: string
     @Field()
     age: number
+    @Field()
+    role?: string
 }

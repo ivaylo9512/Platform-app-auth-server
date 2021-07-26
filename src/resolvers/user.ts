@@ -10,7 +10,7 @@ import User from '../entities/user';
 
 @Resolver()
 export default class UserResolver{
-    @Mutation(() => UserResponse)
+    @Mutation(() => User)
     async forgotPassword(
         @Arg('email') email: string,
         @Ctx() { services: { userService } }: ApolloContext 
@@ -28,20 +28,20 @@ export default class UserResolver{
         return await userService.findById(id, loggedUser);
     }
 
-    @Mutation(() => UserResponse)
+    @Mutation(() => User)
     async login(
         @Arg('userInput') userInput: UserInput,
         @Ctx() { services: { userService } }: ApolloContext
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         return await userService.login(userInput);
     }
 
-    @Mutation(() => UserResponse)
+    @Mutation(() => User)
     async register(
         @Arg('registerInput') registerInput: RegisterInput,
         @Ctx() { services: { userService } }: ApolloContext
-    ): Promise<UserResponse> {
-        return await userService.register(registerInput);
+    ): Promise<User> {
+        return await userService.register(registerInput);;
     }
 
     @Mutation(() => Boolean)
