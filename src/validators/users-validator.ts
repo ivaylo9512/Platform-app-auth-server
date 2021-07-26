@@ -32,14 +32,16 @@ const validateUpdate = async(req: UserRequest) => await Promise.all([
     check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
 ])
 
-export const registerValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+export const registerValidator = async(req: UserRequest, res: Response, next?: NextFunction) => {
     await validateRegister(req);
 
     if(checkForInputErrors(req, res) || await validateCreateUsernameAndEmail(req, res)){
         return;
     }
 
-    return next()
+    if(next){
+        next();
+    }
 }
 
 export const createValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
@@ -53,7 +55,9 @@ export const createValidator = async(req: UserRequest, res: Response, next: Next
         return;
     }
 
-    return next();
+    if(next){
+        next();
+    }
 }
 
 export const updateValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
@@ -66,8 +70,10 @@ export const updateValidator = async(req: UserRequest, res: Response, next: Next
     if(checkForInputErrors(req, res) || !await getUserOrFail(req, res) || await validateUpdateUsernameAndEmail(req, res)){
         return;
     }
-
-    return next();
+    
+    if(next){
+        next();
+    }
 }
 
 type Error = {
@@ -89,8 +95,6 @@ const checkForInputErrors = (req: UserRequest, res: Response) => {
         res.status(422).send(errors);
         return errors;
     }
-
-    return;
 }
 
 const checkForArrayInputErrors = (req: UserRequest, res: Response) => {
@@ -113,8 +117,6 @@ const checkForArrayInputErrors = (req: UserRequest, res: Response) => {
         res.status(422).send(errors);
         return errors;
     }
-
-    return;
 }
 
 const validateCreateUsernamesAndEmails = async(req: UserRequest, res: Response) => {
@@ -146,8 +148,6 @@ const validateCreateUsernameAndEmail = async(req: UserRequest, res: Response) =>
         res.status(422).send({username: 'User with given username or email already exists.'});
         return users;
     }
-
-    return;
 }
 
 const validateUpdateUsernameAndEmail = async(req: UserRequest, res: Response) => {
@@ -158,8 +158,6 @@ const validateUpdateUsernameAndEmail = async(req: UserRequest, res: Response) =>
         res.status(422).send({username: 'Username or email is already in use.' })
         return users;
     }
-
-    return;
 }
 
 const getUserOrFail = async(req: UserRequest, res: Response) => {
