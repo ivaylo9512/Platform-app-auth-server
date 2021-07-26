@@ -4,7 +4,7 @@ import { Response } from "express";
 import { UserRequest } from 'src/types';
 import User from 'src/entities/user';
 
-export const registerValidationRules = () => [
+export const registerValidationRules = [
     check('email', 'Must be a valid email.').isEmail(),
     check('password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}),
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
@@ -13,7 +13,7 @@ export const registerValidationRules = () => [
     check('age', 'You must provide age.').notEmpty()
 ]
 
-export const createValidationRules = () => [
+export const createValidationRules = [
     check('users.*.email', 'Must be a valid email.').isEmail(),
     check('users.*.password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}),
     check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
@@ -23,8 +23,8 @@ export const createValidationRules = () => [
     check('users.*.role', 'You must provide a role.').notEmpty(),
 ]
 
-export const updateValidatorRules = () => [
-    check('id', 'You must provide an id.').notEmpty(),
+export const updateValidatorRules = [
+    check('id', 'You must provide an id.').notEmpty().bail().isInt().withMessage('You must provide id as a whole number.'),
     check('email', 'Must be a valid email.').isEmail(),
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
     check('firstName', 'You must provide a firstName.').notEmpty(),
@@ -114,10 +114,10 @@ const checkForArrayInputErrors = (req: UserRequest, res: Response) => {
 const validateCreateUsernamesAndEmails = async(req: UserRequest, res: Response) => {
     const error = await req.body.users.reduce(async(errorObject: Errors, user: User, i: number) => {
         const {username, email} = user;
-        const foundUser = await req.userService?.findByUsernameOrEmail(username, email);
+        const foundUser = await req.userService!.findByUsernameOrEmail(username, email);
         const errors = await errorObject;
-        
-        if(foundUser){
+
+        if(foundUser.length > 0){
             errors['user' + i] = {
                 username: 'User with given username or email already exists.'
             }
@@ -135,6 +135,7 @@ const validateCreateUsernamesAndEmails = async(req: UserRequest, res: Response) 
 const validateCreateUsernameAndEmail = async(req: UserRequest, res: Response) => {
     const {username, email} = req.body;
     const users = await req.userService!.findByUsernameOrEmail(username, email); 
+
     if(users.length > 0){
         res.status(422).send({username: 'User with given username or email already exists.'});
         return users;
