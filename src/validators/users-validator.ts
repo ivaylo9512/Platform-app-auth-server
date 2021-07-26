@@ -4,35 +4,37 @@ import { Response } from "express";
 import { UserRequest } from 'src/types';
 import User from 'src/entities/user';
 
-export const registerValidationRules = [
-    check('email', 'Must be a valid email.').isEmail(),
-    check('password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}),
-    check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
-    check('firstName', 'You must provide a firstName.').notEmpty(),
-    check('lastName', 'You must provide a lastName.').notEmpty(),
-    check('age', 'You must provide age.').notEmpty()
-]
+const validateRegister = async(req: UserRequest) => await Promise.all(
+    [check('email', 'Must be a valid email.').isEmail().run(req),
+    check('password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}).run(req),
+    check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
+    check('firstName', 'You must provide a firstName.').notEmpty().run(req),
+    check('lastName', 'You must provide a lastName.').notEmpty().run(req),
+    check('age', 'You must provide age.').notEmpty().run(req)
+])
 
-export const createValidationRules = [
-    check('users.*.email', 'Must be a valid email.').isEmail(),
-    check('users.*.password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}),
-    check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
-    check('users.*.firstName', 'You must provide a firstName.').notEmpty(),
-    check('users.*.lastName', 'You must provide a lastName.').notEmpty(),
-    check('users.*.age', 'You must provide a age.').notEmpty(),
-    check('users.*.role', 'You must provide a role.').notEmpty(),
-]
+const validateCreate = async(req: UserRequest) => await Promise.all([
+    check('users.*.email', 'Must be a valid email.').isEmail().run(req),
+    check('users.*.password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}).run(req),
+    check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
+    check('users.*.firstName', 'You must provide a firstName.').notEmpty().run(req),
+    check('users.*.lastName', 'You must provide a lastName.').notEmpty().run(req),
+    check('users.*.age', 'You must provide a age.').notEmpty().run(req),
+    check('users.*.role', 'You must provide a role.').notEmpty().run(req),
+])
 
-export const updateValidatorRules = [
-    check('id', 'You must provide an id.').notEmpty().bail().isInt().withMessage('You must provide id as a whole number.'),
-    check('email', 'Must be a valid email.').isEmail(),
-    check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}), 
-    check('firstName', 'You must provide a firstName.').notEmpty(),
-    check('lastName', 'You must provide a lastName.').notEmpty(),
-    check('age', 'You must provide a age.').notEmpty(),
-]
+const validateUpdate = async(req: UserRequest) => await Promise.all([
+    check('id', 'You must provide an id.').notEmpty().bail().isInt().withMessage('You must provide id as a whole number.').run(req),
+    check('email', 'Must be a valid email.').isEmail().run(req),
+    check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
+    check('firstName', 'You must provide a firstName.').notEmpty().run(req),
+    check('lastName', 'You must provide a lastName.').notEmpty().run(req),
+    check('age', 'You must provide a age.').notEmpty().run(req),
+])
 
 export const registerValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+    await validateRegister(req);
+
     if(checkForInputErrors(req, res) || await validateCreateUsernameAndEmail(req, res)){
         return;
     }
@@ -41,6 +43,8 @@ export const registerValidator = async(req: UserRequest, res: Response, next: Ne
 }
 
 export const createValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+    await validateCreate(req);
+
     if(req.user?.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
@@ -53,6 +57,8 @@ export const createValidator = async(req: UserRequest, res: Response, next: Next
 }
 
 export const updateValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+    await validateUpdate(req);
+
     if(req.body.id != req.user?.id && req.user?.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
