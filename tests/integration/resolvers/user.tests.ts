@@ -17,7 +17,7 @@ type User = {
     age: number
 }
 
-const [secondUser, thirthUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
+const [secondUser, thirdUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
     username: 'testUser' + i, 
     password: 'testUserPassword' + i, 
     email: `testEmail${i}@gmail.com`,
@@ -27,7 +27,7 @@ const [secondUser, thirthUser, forthUser, fifthUser]: User[] = Array.from({lengt
     lastName: 'lastNameTest' + i
 }))
 
-const [updateSecondUser, updateThirthUser]: User[] = Array.from({length: 2}, (_user, i) => ({
+const [updateSecondUser, updateThirdUser]: User[] = Array.from({length: 2}, (_user, i) => ({
     id: i + 2,
     username: 'testUserUpdated' + i, 
     email: `testEmailUpdated${i}@gmail.com`,
@@ -52,7 +52,7 @@ const createAdminUser = async () => {
     await repo.flush()
 }
 
-let registerQuery = {
+let createRegisterQuery = (user: User) => ({
     query: `mutation register($registerInput: RegisterInput!){
                 register(registerInput: $registerInput){
                     id,
@@ -65,11 +65,28 @@ let registerQuery = {
                 }
             }`,
     variables:{ registerInput:
-        secondUser 
+        user 
     },
     operationName: 'register',
-};
-let userByIdQuery = {
+})
+let createManyQuery = (users: User[]) => ({
+    query: `mutation createMany($users: [RegisterInput!]!){
+                createMany(users: $users){
+                    id,
+                    username,
+                    age,
+                    email,
+                    firstName,
+                    lastName,
+                    role
+                }
+            }`,
+    variables:{ 
+        users
+    },
+    operationName: 'createMany',
+});
+let userByIdQuery = (id: number) => ({
     query: `query userById($id: Int!){
                 userById(id: $id){
                     id
@@ -78,9 +95,9 @@ let userByIdQuery = {
             }`,
     operationName: 'userById',
     variables: {
-        id: 1
+        id
     }
-};
+});
 
 let app:Express, orm: MikroORM, redis: Redis;
 export const resolverTests = () => {
@@ -89,12 +106,18 @@ export const resolverTests = () => {
 
         await createAdminUser();
     })
+
+    afterAll(async() => {
+        await orm.close()
+        await redis.disconnect();
+    })
+
     it('should register user', async() => {
         const res = await request(app)
             .post('/graphql')
-            .send(registerQuery)
+            .send(createRegisterQuery(secondUser))
             .expect(200);
-            
+
             const user = res.body.data.register;
 
             secondUser.id = user.id;
@@ -108,9 +131,68 @@ export const resolverTests = () => {
             expect(user).toEqual(secondUser);
     })
 
-    afterAll(async() => {
-        await orm.close()
-        await redis.disconnect();
+    it('should retrun 422 when register user with exsisting username', async() => {
+        const user = {...secondUser, email: 'uniqueEmail@gmail.com', password: 'testPassword', id: undefined};
+        
+        const res = await request(app)
+            .post('/graphql')
+            .send(createRegisterQuery(user))
+            .expect(422);
+
+
+        const error = res.body.errors[0].extensions;
+        expect(error.username).toBe('Username or email is already in use.');
+    })
+    
+    it('should retrun 422 when register user with exsisting email', async() => {
+        const user = {...secondUser, username: 'uniqueUsername', password: 'testPassword', id: undefined};
+        
+        const res = await request(app)
+            .post('/graphql')
+            .send(createRegisterQuery(user))
+            .expect(422);
+
+        const error = res.body.errors[0].extensions;
+        expect(error.username).toBe('Username or email is already in use.');
     })
 
+    it('should create users when logged user is admin', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createManyQuery([thirdUser, forthUser, fifthUser]))
+            .expect(200);
+
+        const users = res.body.data.createMany;
+        const [{id: secondId}, {id: thirdId}, {id: forthId}] = users;
+        
+        thirdUser.id = secondId;
+        forthUser.id = thirdId;
+        fifthUser.id = forthId;
+
+        delete thirdUser.password;
+        delete forthUser.password;
+        delete fifthUser.password;
+
+        expect([secondId, thirdId, forthId]).toEqual([3, 4, 5]);
+        expect(users).toEqual([thirdUser, forthUser, fifthUser]);
+    })
+
+    it('should return 401 when creating user with user that is not admin', async() => {
+        const user = {
+            ...secondUser,
+            username: 'uniqueUsername', 
+            email: 'uniqueEmail@gmail.com',
+            password: 'testPassword',
+            id: undefined
+        }
+
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', firstToken)
+            .send(createManyQuery([user]))
+            .expect(401);
+
+        expect(res.text).toBe('Unauthorized.');
+    })
 }
