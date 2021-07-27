@@ -1,10 +1,9 @@
 import { check, validationResult } from 'express-validator';
 import { NextFunction } from 'express';
-import { Response } from "express";
-import { UserRequest } from 'src/types';
+import { Response, Request } from "express";
 import User from 'src/entities/user';
 
-const validateRegister = async(req: UserRequest) => await Promise.all(
+const validateRegister = async(req: Request) => await Promise.all(
     [check('email', 'Must be a valid email.').isEmail().run(req),
     check('password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}).run(req),
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
@@ -13,7 +12,7 @@ const validateRegister = async(req: UserRequest) => await Promise.all(
     check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
 ])
 
-const validateCreate = async(req: UserRequest) => await Promise.all([
+const validateCreate = async(req: Request) => await Promise.all([
     check('users.*.email', 'Must be a valid email.').isEmail().run(req),
     check('users.*.password', 'Password must be between 10 and 22 characters').isLength({min:10, max: 22}).run(req),
     check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
@@ -23,7 +22,7 @@ const validateCreate = async(req: UserRequest) => await Promise.all([
     check('users.*.role', 'You must provide a role.').notEmpty().run(req),
 ])
 
-const validateUpdate = async(req: UserRequest) => await Promise.all([
+const validateUpdate = async(req: Request) => await Promise.all([
     check('id', 'You must provide an id.').notEmpty().bail().isInt().withMessage('You must provide id as a whole number.').run(req),
     check('email', 'Must be a valid email.').isEmail().run(req),
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
@@ -32,48 +31,78 @@ const validateUpdate = async(req: UserRequest) => await Promise.all([
     check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
 ])
 
-export const registerValidator = async(req: UserRequest, res: Response, next?: NextFunction) => {
+export const registerValidator = async(req: Request, res: Response, next: NextFunction) => {
     await validateRegister(req);
 
-    if(checkForInputErrors(req, res) || await validateCreateUsernameAndEmail(req, res)){
-        return;
+    const errors = checkForInputErrors(req) || await validateCreateUsernameAndEmail(req);
+    if(errors){
+        return res.status(422).send(errors);
     }
-
-    if(next){
-        next();
-    }
+    next();
 }
 
-export const createValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+export const registerResolverValidator = async(req: Request) => {
+    await validateRegister(req);
+
+    return checkForInputErrors(req) || await validateCreateUsernameAndEmail(req);
+}
+export const createResolverValidator = async(req: Request) => {
     await validateCreate(req);
 
-    if(req.user?.role != 'admin'){
+    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
+    if(loggedUser.role != 'admin'){
+        return { 
+            user: 'Unauthorized.'
+        };
+    }
+
+    return checkForArrayInputErrors(req) || await validateCreateUsernamesAndEmails(req);
+}
+export const createValidator = async(req: Request, res: Response, next: NextFunction) => {
+    await validateCreate(req);
+    
+    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
+    if(loggedUser.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
 
-    if(checkForArrayInputErrors(req, res) || await validateCreateUsernamesAndEmails(req, res)){
-        return;
+    const errors = checkForArrayInputErrors(req) || await validateCreateUsernamesAndEmails(req);
+
+    if(errors){
+        return res.status(422).send(errors);
     }
 
-    if(next){
-        next();
-    }
+    next();
 }
 
-export const updateValidator = async(req: UserRequest, res: Response, next: NextFunction) => {
+export const updateResolverValidator = async(req: Request) => {
     await validateUpdate(req);
 
-    if(req.body.id != req.user?.id && req.user?.role != 'admin'){
+    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
+    if(loggedUser.role != 'admin'){
+        return { 
+            user: 'Unauthorized.'
+        };
+    }
+    
+    return checkForInputErrors(req) || await findtUserOrFail(req, loggedUser) || await validateUpdateUsernameAndEmail(req);
+}
+
+export const updateValidator = async(req: Request, res: Response, next: NextFunction) => {
+    await validateUpdate(req);
+
+    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
+    if(req.body.id != loggedUser.id && loggedUser.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
 
-    if(checkForInputErrors(req, res) || !await getUserOrFail(req, res) || await validateUpdateUsernameAndEmail(req, res)){
-        return;
+    const errors = checkForInputErrors(req) || await findtUserOrFail(req, loggedUser) || await validateUpdateUsernameAndEmail(req);
+
+    if(errors){
+        return res.status(422).send(errors);
     }
     
-    if(next){
-        next();
-    }
+    next();
 }
 
 type Error = {
@@ -82,7 +111,7 @@ type Error = {
 type Errors = {
     [name: string]: Error;
 }
-const checkForInputErrors = (req: UserRequest, res: Response) => {
+const checkForInputErrors = (req: Request) => {
     const result = validationResult(req);
 
     if(!result.isEmpty()){
@@ -92,12 +121,11 @@ const checkForInputErrors = (req: UserRequest, res: Response) => {
             return errorObject;
         }, {})
 
-        res.status(422).send(errors);
         return errors;
     }
 }
 
-const checkForArrayInputErrors = (req: UserRequest, res: Response) => {
+const checkForArrayInputErrors = (req: Request) => {
     const result = validationResult(req);
 
     if(!result.isEmpty()){
@@ -114,15 +142,14 @@ const checkForArrayInputErrors = (req: UserRequest, res: Response) => {
             return errorObject;
         }, {})
 
-        res.status(422).send(errors);
         return errors;
     }
 }
 
-const validateCreateUsernamesAndEmails = async(req: UserRequest, res: Response) => {
+const validateCreateUsernamesAndEmails = async(req: Request) => {
     const error = await req.body.users.reduce(async(errorObject: Errors, user: User, i: number) => {
         const {username, email} = user;
-        const foundUser = await req.userService!.findByUsernameOrEmail(username, email);
+        const foundUser = await req.userService.findByUsernameOrEmail(username, email);
         const errors = await errorObject;
 
         if(foundUser.length > 0){
@@ -135,38 +162,34 @@ const validateCreateUsernamesAndEmails = async(req: UserRequest, res: Response) 
     }, {})
 
     if(Object.keys(error).length > 0){
-        res.status(422).send(error);
         return error;
     }
 }
 
-const validateCreateUsernameAndEmail = async(req: UserRequest, res: Response) => {
+const validateCreateUsernameAndEmail = async(req: Request) => {
     const {username, email} = req.body;
-    const users = await req.userService!.findByUsernameOrEmail(username, email); 
+    const users = await req.userService.findByUsernameOrEmail(username, email); 
 
     if(users.length > 0){
-        res.status(422).send({username: 'User with given username or email already exists.'});
-        return users;
+        return {username: 'Username or email is already in use.' };
     }
 }
 
-const validateUpdateUsernameAndEmail = async(req: UserRequest, res: Response) => {
+const validateUpdateUsernameAndEmail = async(req: Request) => {
     const { id, username, email } = req.body;
-    const users = (await req.userService!.findByUsernameOrEmail(username, email)).filter(user => user.id != id);
+    const users = (await req.userService.findByUsernameOrEmail(username, email)).filter(user => user.id != id);
 
     if(users.length > 0){
-        res.status(422).send({username: 'Username or email is already in use.' })
-        return users;
+        return {username: 'Username or email is already in use.' };
     }
 }
 
-const getUserOrFail = async(req: UserRequest, res: Response) => {
+const findtUserOrFail = async(req: Request, loggedUser: User) => {
     const id = req.body.id;
-    const user = await req.userService?.findById(id, req.user!);
+    const user = await req.userService.findById(id, loggedUser);
     if(!user){
-        return res.status(422).send({ id: `User with ${id} doesn't exist`});
+        return { id: `User with ${id} doesn't exist`};
     } 
 
     req.foundUser = user;
-    return user;
 }
