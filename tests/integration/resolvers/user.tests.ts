@@ -7,6 +7,7 @@ import request from 'supertest';
 import { Express } from 'express';
 import UserEntity from '../../../src/entities/user';
 import { Redis } from 'ioredis';
+import LoginInput from '../../../src/resolvers/types/login-input';
 
 type User = {
     id?: number,
@@ -64,12 +65,12 @@ let createRegisterQuery = (user: User) => ({
                     role
                 }
             }`,
-    variables:{ registerInput:
-        user 
+    variables:{ 
+        registerInput: user 
     },
     operationName: 'register',
 })
-let createManyQuery = (users: User[]) => ({
+let createManyMutation = (users: User[]) => ({
     query: `mutation createMany($users: [RegisterInput!]!){
                 createMany(users: $users){
                     id,
@@ -85,6 +86,23 @@ let createManyQuery = (users: User[]) => ({
         users
     },
     operationName: 'createMany',
+});
+let createLoginMutation = (user: LoginInput) => ({
+    query: `mutation login($loginInput: LoginInput!){
+                login(loginInput: $loginInput){
+                    id,
+                    username,
+                    age,
+                    email,
+                    firstName,
+                    lastName,
+                    role
+                }
+            }`,
+    variables:{ 
+        loginInput: user
+    },
+    operationName: 'login',
 });
 let userByIdQuery = (id: number) => ({
     query: `query userById($id: Int!){
@@ -160,7 +178,7 @@ export const resolverTests = () => {
         const res = await request(app)
             .post('/graphql')
             .set('Authorization', adminToken)
-            .send(createManyQuery([thirdUser, forthUser, fifthUser]))
+            .send(createManyMutation([thirdUser, forthUser, fifthUser]))
             .expect(200);
 
         const users = res.body.data.createMany;
@@ -190,9 +208,61 @@ export const resolverTests = () => {
         const res = await request(app)
             .post('/graphql')
             .set('Authorization', firstToken)
-            .send(createManyQuery([user]))
-            .expect(401);
+            .send(createManyMutation([user]))
 
-        expect(res.text).toBe('Unauthorized.');
+        expect(res.body.errors[0].message).toBe('Unauthorized.');
     })
+
+    it('should login user with username', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createLoginMutation({
+                username: thirdUser.username,
+                password: 'testUserPassword1'
+            }))
+            .expect(200);
+
+            console.log(res);
+        const refreshCookie = (<Array<String>>(res.get('set-cookie') as unknown))?.find(cookie => cookie.includes('refreshToken'));
+        expect(refreshCookie).toBeDefined();
+
+        refreshToken = refreshCookie!.split(';')[0].split('refreshToken=')[1];
+        secondToken = 'Bearer ' + res.get('Authorization');
+    
+        expect(res.body.data.login).toEqual(thirdUser);
+    })
+
+    it('should login user with email', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createLoginMutation({
+                email: fifthUser.email,
+                password: 'testUserPassword3'
+            }))
+            .expect(200);
+
+        forthToken = 'Bearer ' + res.get('Authorization');
+        expect(res.body.data.login).toEqual(fifthUser);
+    })
+
+    it('should get token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Cookie', `refreshToken=${refreshToken}`)
+            expect(200);
+            
+        expect(res.get('Authorization')).toBeDefined();
+    })
+
+    it('should return 401 when login user with wrong password', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createLoginMutation({
+                email: thirdUser.email,
+                password: 'wrongPassword'
+            }))
+
+        expect(res.body.errors[0].message).toBe('Incorrect username, pasword or email.');
+    })
+
 }
