@@ -1,5 +1,5 @@
 import { IMiddlewareFunction } from "graphql-middleware";
-import { registerResolverValidator, createResolverValidator, updateResolverValidator } from "src/validators/users-validator";
+import { registerResolverValidator, createResolverValidator, updateResolverValidator } from "../../validators/users-validator";
 import { UserInputError } from "apollo-server-express";
 
 export const registerMiddleware = {

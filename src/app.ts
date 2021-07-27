@@ -17,6 +17,8 @@ import User from './entities/user';
 import RefreshTokenServiceImpl from './services/refresh-token-service-impl';
 import RefreshToken from './entities/refresh-token';
 import { registerMiddleware, createManyMiddleware, updateManyMiddleware } from './resolvers/middlewares/user-validators';
+import authResolverMiddleware from './resolvers/middlewares/auth';
+
 export const NODE_ENV = process.env.NODE_ENV;
 
 export const initialize = async () => {
@@ -60,7 +62,7 @@ export const initialize = async () => {
     const server = new ApolloServer({
         schema: applyMiddleware(await buildSchema({
             resolvers: [UserResolver],
-        }), registerMiddleware, createManyMiddleware, updateManyMiddleware),
+        }), authResolverMiddleware, registerMiddleware, createManyMiddleware, updateManyMiddleware),
         context: ({req, res}) => {
             req.userService = userService;
             req.refreshTokenService = refreshTokenService;
