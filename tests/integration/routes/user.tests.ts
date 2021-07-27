@@ -15,7 +15,7 @@ type User = {
     age: number
 }
 
-const [secondUser, thirthUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
+const [secondUser, thirdUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
     username: 'testUser' + i, 
     password: 'testUserPassword' + i, 
     email: `testEmail${i}@gmail.com`,
@@ -25,7 +25,7 @@ const [secondUser, thirthUser, forthUser, fifthUser]: User[] = Array.from({lengt
     lastName: 'lastNameTest' + i
 }))
 
-const [updateSecondUser, updateThirthUser]: User[] = Array.from({length: 2}, (_user, i) => ({
+const [updateSecondUser, updateThirdUser]: User[] = Array.from({length: 2}, (_user, i) => ({
     id: i + 2,
     username: 'testUserUpdated' + i, 
     email: `testEmailUpdated${i}@gmail.com`,
@@ -90,7 +90,7 @@ export const routeTests = () => {
             .send(user)
             .expect(422);
 
-        expect(res.body.username).toBe('User with given username or email already exists.');
+        expect(res.body.username).toBe('Username or email is already in use.');
     })
 
     
@@ -103,7 +103,7 @@ export const routeTests = () => {
             .send(user)
             .expect(422);
 
-        expect(res.body.username).toBe('User with given username or email already exists.');
+        expect(res.body.username).toBe('Username or email is already in use.');
     })
 
     it('should retrun 422 when register user with invalid fields', async() => {
@@ -150,22 +150,22 @@ export const routeTests = () => {
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
             .send({
-                users: [thirthUser, forthUser, fifthUser]
+                users: [thirdUser, forthUser, fifthUser]
             })
             .expect(200);
 
         const [{id: secondId}, {id: thirdId}, {id: forthId}] = res.body 
         
-        thirthUser.id = secondId;
+        thirdUser.id = secondId;
         forthUser.id = thirdId;
         fifthUser.id = forthId;
 
-        delete thirthUser.password;
+        delete thirdUser.password;
         delete forthUser.password;
         delete fifthUser.password;
 
         expect([secondId, thirdId, forthId]).toEqual([3, 4, 5]);
-        expect(res.body).toEqual([thirthUser, forthUser, fifthUser]);
+        expect(res.body).toEqual([thirdUser, forthUser, fifthUser]);
     })
 
     it('should return 401 when creating user with user that is not admin', async() => {
@@ -191,7 +191,7 @@ export const routeTests = () => {
             .post('/users/login')
             .set('Content-Type', 'Application/json')
             .send({
-                username: thirthUser.username,
+                username: thirdUser.username,
                 password: 'testUserPassword1'
             })
             .expect(200);
@@ -202,7 +202,7 @@ export const routeTests = () => {
         refreshToken = refreshCookie!.split(';')[0].split('refreshToken=')[1];
         secondToken = 'Bearer ' + res.get('Authorization');
     
-        expect(res.body).toEqual(thirthUser);
+        expect(res.body).toEqual(thirdUser);
     })
 
     it('should login user with email', async() => {
@@ -246,7 +246,7 @@ export const routeTests = () => {
             .post('/users/login')
             .set('Content-Type', 'Application/json')
             .send({
-                email: thirthUser.email,
+                email: thirdUser.email,
                 password: 'wrongPassword'
             })
             .expect(401);
@@ -299,10 +299,10 @@ export const routeTests = () => {
             .patch('/users/auth/update')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
-            .send(updateThirthUser)
+            .send(updateThirdUser)
             .expect(200);
 
-        expect(res.body).toEqual(updateThirthUser);
+        expect(res.body).toEqual(updateThirdUser);
     })
 
     it('should return 401 when deleting user from another loggedUser that is not admin: role', async() => {
@@ -382,14 +382,14 @@ export const routeTests = () => {
             user1: {username: 'User with given username or email already exists.'}
         }
         const secondUser = {...updateSecondUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
-        const thirthUser = {...updateThirthUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
+        const thirdUser = {...updateThirdUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword'};
 
         const res = await request(app)
             .post('/users/auth/createMany')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
             .send({
-                users: [secondUser, thirthUser]
+                users: [secondUser, thirdUser]
             })
 
         expect(res.body).toEqual(error)
@@ -401,14 +401,14 @@ export const routeTests = () => {
             user1: {username: 'User with given username or email already exists.'}
         }
         const secondUser = {...updateSecondUser, username: 'uniqueUsername', password: 'testPassword'};
-        const thirthUser = {...updateThirthUser, username: 'uniqueUsername1', password: 'testPassword'};
+        const thirdUser = {...updateThirdUser, username: 'uniqueUsername1', password: 'testPassword'};
 
         const res = await request(app)
             .post('/users/auth/createMany')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
             .send({
-                users: [secondUser, thirthUser]
+                users: [secondUser, thirdUser]
             })
             .expect(422);
             
@@ -456,7 +456,7 @@ export const routeTests = () => {
     })
 
     it('should return 422 when updating user with username that is in use.', async() => {
-        const user = {...updateSecondUser, username: updateThirthUser.username}
+        const user = {...updateSecondUser, username: updateThirdUser.username}
         const error = {username: 'Username or email is already in use.'};
         
         const res = await request(app)
@@ -470,7 +470,7 @@ export const routeTests = () => {
     })
 
     it('should return 422 when updating user with email that is in use.', async() => {
-        const user = {...updateSecondUser, email: updateThirthUser.email}
+        const user = {...updateSecondUser, email: updateThirdUser.email}
         const error = {username: 'Username or email is already in use.'};
 
         const res = await request(app)
