@@ -8,6 +8,7 @@ import { Express } from 'express';
 import UserEntity from '../../../src/entities/user';
 import { Redis } from 'ioredis';
 import LoginInput from '../../../src/resolvers/types/login-input';
+import UpdateInput from '../../../src/resolvers/types/update-input';
 
 type User = {
     id?: number,
@@ -28,7 +29,7 @@ const [secondUser, thirdUser, forthUser, fifthUser]: User[] = Array.from({length
     lastName: 'lastNameTest' + i
 }))
 
-const [updateSecondUser, updateThirdUser]: User[] = Array.from({length: 2}, (_user, i) => ({
+const [updateSecondUser, updateThirdUser]: UpdateInput[] = Array.from({length: 2}, (_user, i) => ({
     id: i + 2,
     username: 'testUserUpdated' + i, 
     email: `testEmailUpdated${i}@gmail.com`,
@@ -104,11 +105,33 @@ let createLoginMutation = (user: LoginInput) => ({
     },
     operationName: 'login',
 });
-let userByIdQuery = (id: number) => ({
+let createUpdateMutation = (user: UpdateInput) => ({
+    query: `mutation update($updateInput: UpdateInput!){
+                update(updateInput: $updateInput){
+                    id,
+                    username,
+                    age,
+                    email,
+                    firstName,
+                    lastName,
+                    role
+                }
+            }`,
+    variables:{ 
+        updateInput: user
+    },
+    operationName: 'update',
+});
+let createUserByIdQuery = (id: number) => ({
     query: `query userById($id: Int!){
                 userById(id: $id){
-                    id
-                    username
+                    id,
+                    username,
+                    age,
+                    email,
+                    firstName,
+                    lastName,
+                    role
                 }
             }`,
     operationName: 'userById',
@@ -196,7 +219,7 @@ export const resolverTests = () => {
         expect(users).toEqual([thirdUser, forthUser, fifthUser]);
     })
 
-    it('should return 401 when creating user with user that is not admin', async() => {
+    it('should return Unauthorized when creating user with user that is not admin', async() => {
         const user = {
             ...secondUser,
             username: 'uniqueUsername', 
@@ -222,7 +245,6 @@ export const resolverTests = () => {
             }))
             .expect(200);
 
-            console.log(res);
         const refreshCookie = (<Array<String>>(res.get('set-cookie') as unknown))?.find(cookie => cookie.includes('refreshToken'));
         expect(refreshCookie).toBeDefined();
 
@@ -254,7 +276,7 @@ export const resolverTests = () => {
         expect(res.get('Authorization')).toBeDefined();
     })
 
-    it('should return 401 when login user with wrong password', async() => {
+    it('should return Unauthorized when login user with wrong password', async() => {
         const res = await request(app)
             .post('/graphql')
             .send(createLoginMutation({
@@ -265,4 +287,49 @@ export const resolverTests = () => {
         expect(res.body.errors[0].message).toBe('Incorrect username, pasword or email.');
     })
 
+    it('should return secondUser when findById with id 2', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', firstToken)
+            .send(createUserByIdQuery(2))
+
+        expect(res.body.data.userById).toEqual(secondUser);
+    })
+
+    it('should return Unauthorized when findById with nonexistent id', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createUserByIdQuery(252))
+
+        expect(res.body.errors[0].message).toBe('User not found.');
+    })
+
+    it('should return Unauthorized when updating user from another loggedUser that is not admin: role', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', secondToken)
+            .send(createUpdateMutation(updateSecondUser))
+
+        expect(res.body.errors[0].message).toBe('Unauthorized.');
+    })
+
+    it('should update user when updating with same logged user id', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', firstToken)
+            .send(createUpdateMutation(updateSecondUser))
+
+        expect(res.body.data.update).toEqual(updateSecondUser);
+    })
+
+    it('should update user when updating with logged user with role: admin', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createUpdateMutation(updateThirdUser))
+            .expect(200);
+
+        expect(res.body.data.update).toEqual(updateThirdUser);
+    })
 }
