@@ -3,15 +3,18 @@ import RefreshTokenRepositoryImpl from "../repositories/refresh-token-repository
 import UnauthorizedException from "../expceptions/unauthorized";
 import User from "../entities/user";
 import RefreshToken from "../entities/refresh-token";
-import { refreshExpiry } from "../authentication/jwt";
+import { refreshExpiry, refreshSecret } from "../authentication/jwt";
+import { verify } from "jsonwebtoken";
 
 export default class RefreshTokenServiceImpl implements RefreshTokenService{
     repo: RefreshTokenRepositoryImpl;
     expiryDays: number;
+    secret: string;
 
     constructor(repo: RefreshTokenRepositoryImpl){
         this.repo = repo;
         this.expiryDays = refreshExpiry / 60 / 60 / 24
+        this.secret = refreshSecret;
     }
     
     async findById(id: number, loggedUser: User){
@@ -38,10 +41,19 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
         return refreshToken;
     }
 
-    async delete(refreshToken: RefreshToken, loggedUser: User){
-        if(loggedUser.id != refreshToken.owner.id && loggedUser.role != 'admin'){
-            throw new UnauthorizedException('Unauthorized.');
+    async delete(token: string){
+        try{
+            const jwtUser = verify(token, this.secret);
+        }catch(err){
+            return false;
         }
+
+        const refreshToken = await this.repo.findByToken(token);
+
+        if(!refreshToken){
+            return false;
+        }
+        
         await this.repo.delete(refreshToken)
         await this.repo.flush();
 
