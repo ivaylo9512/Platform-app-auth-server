@@ -73,6 +73,7 @@ let createRegisterQuery = (user: User) => ({
     },
     operationName: 'register',
 })
+
 let createManyMutation = (users: User[]) => ({
     query: `mutation createMany($users: [RegisterInput!]!){
                 createMany(users: $users){
@@ -90,6 +91,7 @@ let createManyMutation = (users: User[]) => ({
     },
     operationName: 'createMany',
 });
+
 let createLoginMutation = (user: LoginInput) => ({
     query: `mutation login($loginInput: LoginInput!){
                 login(loginInput: $loginInput){
@@ -107,6 +109,7 @@ let createLoginMutation = (user: LoginInput) => ({
     },
     operationName: 'login',
 });
+
 let createUpdateMutation = (user: UpdateInput) => ({
     query: `mutation update($updateInput: UpdateInput!){
                 update(updateInput: $updateInput){
@@ -124,6 +127,7 @@ let createUpdateMutation = (user: UpdateInput) => ({
     },
     operationName: 'update',
 });
+
 let createDeleteMutation = (id: number) => ({
     query: `mutation delete($id: Int!){
                 delete(id: $id)
@@ -133,6 +137,25 @@ let createDeleteMutation = (id: number) => ({
         id
     }
 });
+
+let createUserByUsernameQuery = (username: string) => ({
+    query: `query userByUsername($username: String!){
+                userById(username: $username){
+                    id,
+                    username,
+                    age,
+                    email,
+                    firstName,
+                    lastName,
+                    role
+                }
+            }`,
+    operationName: 'userById',
+    variables: {
+        username
+    }
+})
+
 let createUserByIdQuery = (id: number) => ({
     query: `query userById($id: Int!){
                 userById(id: $id){
@@ -390,5 +413,77 @@ export const resolverTests = () => {
             .send(createUpdateMutation(user))
 
         expect(res.body.errors[0].message).toBe('User not found.');
+    })
+
+    it('should return error when creating users with usernames that are already in use.', async() => {
+        const error = {
+            user0: { username: 'User with given username or email already exists.'}, 
+            user1: {username: 'User with given username or email already exists.'}
+        }
+        const secondUser = {...updateSecondUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword', id: undefined};
+        const thirdUser = {...updateThirdUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword', id: undefined};
+
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createManyMutation([secondUser, thirdUser]));
+
+        expect(res.body.errors[0].extensions.message).toEqual(error)
+    })
+
+    it('should return error when creating users with emails that are already in use.', async() => {
+        const error = {
+            user0: { username: 'User with given username or email already exists.'}, 
+            user1: {username: 'User with given username or email already exists.'}
+        }
+        const secondUser = {...updateSecondUser, username: 'uniqueUsername', password: 'testPassword', id: undefined};
+        const thirdUser = {...updateThirdUser, username: 'uniqueUsername1', password: 'testPassword', id: undefined};
+
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createManyMutation([secondUser, thirdUser]));
+            
+        expect(res.body.errors[0].extensions.message).toEqual(error)
+    })
+
+    it('should return error when updating user with username that is in use.', async() => {
+        const user = {...updateSecondUser, username: updateThirdUser.username}
+        const error = {username: 'Username or email is already in use.'};
+        
+        const res = await request(app)
+            .patch('graphql')
+            .set('Authorization', firstToken)
+            .send(createUpdateMutation(user))
+
+        expect(res.body.errors[0].extensions.message).toEqual(error);
+    })
+
+    it('should return 422 when updating user with email that is in use.', async() => {
+        const user = {...updateSecondUser, email: updateThirdUser.email}
+        const error = {username: 'Username or email is already in use.'};
+
+        const res = await request(app)
+            .patch('graphql')
+            .set('Authorization', firstToken)
+            .send(createUpdateMutation(user))
+
+        expect(res.body.errors[0].extensions.message).toEqual(error);
+    })
+
+    it('should return user when userByUsername', async() => {
+        const res = await request(app)
+            .get('/graphql')
+            .send(createUserByUsernameQuery(updateSecondUser.username))
+
+        expect(res.body.data.userByUsername).toEqual(updateSecondUser)
+    })
+
+    it('should return error when userByUsername with nonexistent username', async() => {
+        const res = await request(app)
+        .get('/graphql')
+        .send(createUserByUsernameQuery('nonExistent'))
+
+        expect(res.body.errors[0].message).toEqual('User not found.')
     })
 }
