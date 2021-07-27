@@ -16,7 +16,9 @@ type User = {
     password?: string,
     email: string,
     role: string,
-    age: number
+    age: number,
+    firstName: string,
+    lastName: string
 }
 
 const [secondUser, thirdUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
@@ -121,6 +123,15 @@ let createUpdateMutation = (user: UpdateInput) => ({
         updateInput: user
     },
     operationName: 'update',
+});
+let createDeleteMutation = (id: number) => ({
+    query: `mutation delete($id: Int!){
+                delete(id: $id)
+            }`,
+    operationName: 'delete',
+    variables: {
+        id
+    }
 });
 let createUserByIdQuery = (id: number) => ({
     query: `query userById($id: Int!){
@@ -331,5 +342,53 @@ export const resolverTests = () => {
             .expect(200);
 
         expect(res.body.data.update).toEqual(updateThirdUser);
+    })
+
+    it('should return Unauthorized when deleting user from another loggedUser that is not admin: role', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createDeleteMutation(2))
+            .set('Authorization', secondToken)
+
+        expect(res.body.errors[0].message).toBe('Unauthorized.');
+    })
+
+    it('should delete user when deleting with same logged user id', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', forthToken)
+            .send(createDeleteMutation(5))
+
+        expect(res.body.data.delete).toBe(true);
+    })
+
+    it('should delete user when deleting with logged user with role: admin', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createDeleteMutation(4))
+
+        expect(res.body.data.delete).toBe(true);
+    })
+
+    it('should return false when deleting nonexistent user', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', adminToken)
+            .send(createDeleteMutation(5))
+            .expect(200);
+
+        expect(res.body.data.delete).toBe(false);
+    })
+
+    it('should return 404 when updating nonexistent user', async() => {
+        const user = {...fifthUser} as UpdateInput
+        const res = await request(app)
+            .post('/graphql')
+            .set('Content-Type', 'Application/json')
+            .set('Authorization', adminToken)
+            .send(createUpdateMutation(user))
+
+        expect(res.body.errors[0].message).toBe('User not found.');
     })
 }
