@@ -16,7 +16,7 @@ import { authMiddleware } from './authentication/authenticate';
 import User from './entities/user';
 import RefreshTokenServiceImpl from './services/refresh-token-service-impl';
 import RefreshToken from './entities/refresh-token';
-import { registerResolverValidator, updateResolverValidator, createResolverValidator } from './validators/users-validator';
+import { registerMiddleware, createManyMiddleware, updateManyMiddleware } from './resolvers/middlewares/user-validators';
 export const NODE_ENV = process.env.NODE_ENV;
 
 export const initialize = async () => {
@@ -43,55 +43,6 @@ export const initialize = async () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    const registerMiddleware = {
-        Mutation: {
-            register: (async (resolve, parent, args, context, info) => {
-                const { req, res } = context;
-                req.body = args.registerInput;
-
-                const errors = await registerResolverValidator(req);
-                if(errors){
-                    res.status(422);
-                    throw new UserInputError('Register error.', errors)
-                }
-
-                return await resolve(parent, args, context, info)
-            }) as IMiddlewareFunction,
-        },
-      }
-
-      const createManyMiddleware = {
-        Mutation: {
-            createMany: (async (resolve, parent, args, context, info) => {
-                const { req, res } = context;
-                req.body = args;
-
-                const errors = await createResolverValidator(req);
-                if(errors){
-                    throw new UserInputError('Create many error.', errors)
-                }
-
-                return await resolve(parent, args, context, info)
-          }) as IMiddlewareFunction,
-        },
-    }
-
-    const updateManyMiddleware = {
-        Mutation: {
-            update: (async (resolve, parent, args, context, info) => {
-                const { req, res } = context;
-                req.body = args.updateInput;
-
-                const errors = await updateResolverValidator(req);
-                if(errors){
-                    throw new UserInputError('Update error.', errors)
-                }
-
-                return await resolve(parent, args, context, info)
-          }) as IMiddlewareFunction,
-        },
-    }
-    
     app.use((_req, _res, next) => {
         RequestContext.create(orm.em, next);
     });
