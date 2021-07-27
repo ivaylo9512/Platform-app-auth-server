@@ -1,5 +1,4 @@
-import UserInput from "../resolvers/types/login-input";
-import UserResponse from "../resolvers/types/user-response";
+import LoginInput from "../resolvers/types/login-input";
 import User from "../entities/user";
 import argon2 from 'argon2';
 import UserService from "./base/user-service";
@@ -11,7 +10,6 @@ import UpdateInput from "../resolvers/types/update-input";
 import { verify } from "jsonwebtoken";
 import RefreshToken from "../entities/refresh-token";
 import UnauthorizedException from "../expceptions/unauthorized";
-import { JwtUser } from "src/authentication/jwt-user";
 import UserRepositoryImpl from '../repositories/user-repository-impl'
 
 export default class UserServiceImpl implements UserService {
@@ -23,7 +21,7 @@ export default class UserServiceImpl implements UserService {
         this.redis = redis;
     }
         
-    async findById(id: number, loggedUser: JwtUser): Promise<User>{
+    async findById(id: number, loggedUser: User): Promise<User>{
         if(id != loggedUser.id && loggedUser.role != 'admin'){
             throw new UnauthorizedException('Unauthorized.');
         }
@@ -31,11 +29,15 @@ export default class UserServiceImpl implements UserService {
         return await this.repo.findById(id);
     }
 
+    async findByUsername(username: string){
+        return await this.repo.findByUsername(username)
+    }
+
     async findByUsernameOrEmail(username: string, email: string){
         return await this.repo.findByUsernameOrEmail(username, email)
     }
 
-    async login(userInput: UserInput){
+    async login(userInput: LoginInput){
         let { username, password, email } = userInput; 
 
         const user = await this.repo.findUser(username ? 
@@ -52,7 +54,7 @@ export default class UserServiceImpl implements UserService {
         let { username, password, firstName, lastName, age, email } =  registerInput;
 
         password = await argon2.hash(password);
-        const user = await this.repo.save({ 
+        const user = this.repo.createUser({ 
             username, 
             password,
             firstName, 
@@ -77,8 +79,7 @@ export default class UserServiceImpl implements UserService {
             role
         })));
 
-        await this.repo.persist(users);
-        await this.repo.flush();
+        await this.repo.persist(users).flush();
 
         return users;
     }
@@ -92,12 +93,12 @@ export default class UserServiceImpl implements UserService {
         foundUser.age = age;
         foundUser.email = email;
 
-        await this.repo.update(foundUser);
+        this.repo.update(foundUser);
         await this.repo.flush();
 
         return foundUser;
     }
-    
+
     async getUserFromToken(token: string, secret: string){
         const payload = verify(token, secret);
         
@@ -141,13 +142,17 @@ export default class UserServiceImpl implements UserService {
         await this.repo.flush()
     }
 
-    async removeToken(token: string, secret: string){
-        const jwtUser = verify(token, secret);
-        const user = await this.repo.findOneOrFail({ id: jwtUser.id }, ['refreshTokens']);
-
-        const foundToken = user.refreshTokens.getItems().find((rt) => rt.token == token);
-        if(foundToken){
-            await this.repo.remove(foundToken).flush();
+    async verifyLoggedUser(id: number){
+        if(!id){
+            throw new UnauthorizedException('Unauthorized');
         }
+
+        const user = await this.repo.findOne({ id });
+
+        if(!user){
+            throw new UnauthorizedException('User from token is unavailable.');
+        }
+
+        return user;
     }
 }
