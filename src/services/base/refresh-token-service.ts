@@ -7,4 +7,5 @@ export default interface RefreshTokenService {
     save(token: string, owner: User): Promise<RefreshToken>;
     delete(token: string): Promise<boolean>;
     deleteById(id: number, loggedUser: User): Promise<boolean>;
+    getUserFromToken(token: string): Promise<User>;
 }

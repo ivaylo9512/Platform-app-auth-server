@@ -99,20 +99,7 @@ export default class UserServiceImpl implements UserService {
         return foundUser;
     }
 
-    async getUserFromToken(token: string, secret: string){
-        const payload = verify(token, secret);
-        
-        const user = await this.repo.findOne({ id: payload.id }, ['refreshTokens'])
-        const foundToken = !user?.refreshTokens.getItems().find(rt => rt.token == token);
-
-        if(!user || !foundToken){
-            throw new UnauthorizedException('Unauthorized.');
-        }
-
-        return user;
-    }
-
-    async delete(id: number, loggedUser: JwtUser){
+    async delete(id: number, loggedUser: User){
         if(id != loggedUser.id && loggedUser.role != 'admin'){
             throw new UnauthorizedException('Unauthorized.');
         }

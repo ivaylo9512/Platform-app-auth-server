@@ -68,4 +68,16 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
 
         return await this.repo.delete(refreshToken);
     }
+
+    async getUserFromToken(token: string){
+        const payload = verify(token, this.secret);
+        
+        const refreshToken = await this.repo.findOne({ token }, ['owner']);
+
+        if(!refreshToken){
+            throw new UnauthorizedException('Unauthorized.');
+        }
+
+        return refreshToken.owner;
+    }
 }
