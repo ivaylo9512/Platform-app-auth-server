@@ -9,6 +9,6 @@ export default interface UserRepository {
     deleteById(id: number): Promise<number>;
     update(user: User): User;
     updateById(user: User): Promise<number>;
-    createUser(user: EntityData<User>): Promise<User>;
+    createUser(user: EntityData<User>): User;
     findByUsernameOrEmail(username: string, email: string): Promise<User[]>
 }

@@ -14,13 +14,15 @@ const strategy = new Strategy(opts, (payload, done) => {
     });
 })
 use(strategy);
-export const verifyMiddleware = (app: Express) => 
-    app.use('**/auth', (req, res, next) => 
-        authenticate(strategy, { session: false  }, (_error, user, info, _status) => {
+export const authMiddleware = (app: Express) => {
+    app.use('**/auth', (req, res, next) => {
+        authenticate(strategy, { session: false }, async(_error, user, info, _status) => {
             if(info){
-                return res.status(401).send(info.message);
+                return res.status(401).send(info.message)
             }
-            
-            req.user = user;
+            req.foundUser = await req.userService.verifyLoggedUser(user.id);
+
             return next();
-    }))
+        })(req, res, next)
+    })
+}

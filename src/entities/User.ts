@@ -1,16 +1,17 @@
-import { Entity, PrimaryKey, Property, DateType, OneToMany, Collection } from "@mikro-orm/core";
+import { Entity, PrimaryKey, Property, DateType, OneToMany, Collection, Cascade } from "@mikro-orm/core";
 import { Field, ObjectType, Int } from "type-graphql";
 import RefreshToken from "./refresh-token";
+import UserRepositoryImpl from "../repositories/user-repository-impl";
 
-@Entity()
+@Entity({ customRepository: () => UserRepositoryImpl })
 @ObjectType()
 export default class User{
     @Field(() => Int)    
     @PrimaryKey()
     id!: number;
 
-    @Field(() => String)
     @Property({ type: 'text', unique: true })
+    @Field(() => String)
     username!: string;
 
     @Property({ type: 'text' })
@@ -42,6 +43,6 @@ export default class User{
     @Property({ type: 'text' })
     role = 'user';
 
-    @OneToMany(() => RefreshToken, r => r.owner)
+    @OneToMany(() => RefreshToken, r => r.owner, {cascade: [Cascade.REMOVE]})
     refreshTokens = new Collection<RefreshToken>(this);
 }

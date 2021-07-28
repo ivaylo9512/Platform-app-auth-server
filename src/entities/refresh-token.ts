@@ -1,8 +1,9 @@
 import { ObjectType } from "type-graphql";
 import { PrimaryKey, ManyToOne, Entity, Property } from "@mikro-orm/core";
 import User from "./user";
+import RefreshTokenRepositoryImpl from "../repositories/refresh-token-repository-impl";
 
-@Entity()
+@Entity({ customRepository: () => RefreshTokenRepositoryImpl })
 @ObjectType()
 export default class RefreshToken{
     @PrimaryKey()

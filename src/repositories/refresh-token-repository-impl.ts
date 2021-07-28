@@ -29,7 +29,7 @@ export default class RefreshTokenRepositoryImpl extends EntityRepository<Refresh
         return true;
     }
 
-    async deleteById(id: number){
+    deleteById(id: number){
         return this.nativeDelete({ id })
     }
 }

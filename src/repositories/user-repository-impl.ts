@@ -1,7 +1,7 @@
 import UserRepository from "./base/user-repository";
 import User from "../entities/user";
 import { EntityRepository } from "@mikro-orm/mysql";
-import { Repository, EntityData } from "@mikro-orm/core";
+import { EntityData } from "@mikro-orm/core";
 
 export default class UserRepositoryImpl extends EntityRepository<User> implements UserRepository{
     findById(id: number, selections?: string[]){
@@ -32,9 +32,9 @@ export default class UserRepositoryImpl extends EntityRepository<User> implement
         return this.nativeUpdate({id: user.id}, user);
     }
 
-    async createUser(userInput: EntityData<User>){
+    createUser(userInput: EntityData<User>){
         const user = this.create(userInput);
-        await this.persist(user);
+        this.persist(user);
         
         return user;
     }
@@ -44,7 +44,7 @@ export default class UserRepositoryImpl extends EntityRepository<User> implement
         return true;
     }
 
-    async deleteById(id: number){
-        return await this.nativeDelete({ id })
+    deleteById(id: number){
+        return this.nativeDelete({ id })
     }
 }

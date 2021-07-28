@@ -1,4 +1,5 @@
-import { InputType, Field } from "type-graphql";
+import { InputType, Field, Int } from "type-graphql";
+import { IsEmail, Length, IsNotEmpty, IsInt } from 'class-validator';
 
 @InputType()
 export default class RegisterInput {
@@ -15,5 +16,5 @@ export default class RegisterInput {
     @Field()
     age: number
     @Field()
-    role?: string
+    role: string
 }

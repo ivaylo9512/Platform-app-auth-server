@@ -5,12 +5,11 @@ import { UserInputError } from "apollo-server-express";
 export const registerMiddleware = {
     Mutation: {
         register: (async (resolve, parent, args, context, info) => {
-            const { req, res } = context;
+            const req = context.req;
             req.body = args.registerInput;
 
             const errors = await registerResolverValidator(req);
             if(errors){
-                res.status(422);
                 throw new UserInputError('Register error.', errors)
             }
 
@@ -22,7 +21,7 @@ export const registerMiddleware = {
 export const createManyMiddleware = {
     Mutation: {
         createMany: (async (resolve, parent, args, context, info) => {
-            const { req, res } = context;
+            const req = context.req;
             req.body = args;
 
             const errors = await createResolverValidator(req);
