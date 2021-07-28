@@ -140,7 +140,7 @@ let createDeleteMutation = (id: number) => ({
 
 let createUserByUsernameQuery = (username: string) => ({
     query: `query userByUsername($username: String!){
-                userById(username: $username){
+                userByUsername(username: $username){
                     id,
                     username,
                     age,
@@ -150,7 +150,7 @@ let createUserByUsernameQuery = (username: string) => ({
                     role
                 }
             }`,
-    operationName: 'userById',
+    operationName: 'userByUsername',
     variables: {
         username
     }
@@ -206,28 +206,25 @@ export const resolverTests = () => {
             expect(user).toEqual(secondUser);
     })
 
-    it('should retrun 422 when register user with exsisting username', async() => {
+    it('should retrun error when register user with exsisting username', async() => {
         const user = {...secondUser, email: 'uniqueEmail@gmail.com', password: 'testPassword', id: undefined};
         
         const res = await request(app)
             .post('/graphql')
             .send(createRegisterQuery(user))
-            .expect(422);
 
-
-        const error = res.body.errors[0].extensions;
+        const error = res.body.errors[0].extensions.exception;
         expect(error.username).toBe('Username or email is already in use.');
     })
     
-    it('should retrun 422 when register user with exsisting email', async() => {
+    it('should retrun error when register user with exsisting email', async() => {
         const user = {...secondUser, username: 'uniqueUsername', password: 'testPassword', id: undefined};
         
         const res = await request(app)
             .post('/graphql')
             .send(createRegisterQuery(user))
-            .expect(422);
 
-        const error = res.body.errors[0].extensions;
+        const error = res.body.errors[0].extensions.exception;
         expect(error.username).toBe('Username or email is already in use.');
     })
 
@@ -236,7 +233,6 @@ export const resolverTests = () => {
             .post('/graphql')
             .set('Authorization', adminToken)
             .send(createManyMutation([thirdUser, forthUser, fifthUser]))
-            .expect(200);
 
         const users = res.body.data.createMany;
         const [{id: secondId}, {id: thirdId}, {id: forthId}] = users;
@@ -404,7 +400,7 @@ export const resolverTests = () => {
         expect(res.body.data.delete).toBe(false);
     })
 
-    it('should return 404 when updating nonexistent user', async() => {
+    it('should return error when updating nonexistent user', async() => {
         const user = {...fifthUser} as UpdateInput
         const res = await request(app)
             .post('/graphql')
@@ -415,7 +411,7 @@ export const resolverTests = () => {
         expect(res.body.errors[0].message).toBe('User not found.');
     })
 
-    it('should return error when creating users with usernames that are already in use.', async() => {
+    it('should return error when creating users with usernames that are already in use', async() => {
         const error = {
             user0: { username: 'User with given username or email already exists.'}, 
             user1: {username: 'User with given username or email already exists.'}
@@ -428,7 +424,7 @@ export const resolverTests = () => {
             .set('Authorization', adminToken)
             .send(createManyMutation([secondUser, thirdUser]));
 
-        expect(res.body.errors[0].extensions.message).toEqual(error)
+        expect(res.body.errors[0].extensions.exception).toEqual(error)
     })
 
     it('should return error when creating users with emails that are already in use.', async() => {
@@ -444,36 +440,36 @@ export const resolverTests = () => {
             .set('Authorization', adminToken)
             .send(createManyMutation([secondUser, thirdUser]));
             
-        expect(res.body.errors[0].extensions.message).toEqual(error)
+        expect(res.body.errors[0].extensions.exception).toEqual(error)
     })
 
-    it('should return error when updating user with username that is in use.', async() => {
+    it('should return error when updating user with username that is in use', async() => {
         const user = {...updateSecondUser, username: updateThirdUser.username}
         const error = {username: 'Username or email is already in use.'};
         
         const res = await request(app)
-            .patch('graphql')
+            .post('/graphql')
             .set('Authorization', firstToken)
             .send(createUpdateMutation(user))
 
-        expect(res.body.errors[0].extensions.message).toEqual(error);
+        expect(res.body.errors[0].extensions.exception).toEqual(error);
     })
 
-    it('should return 422 when updating user with email that is in use.', async() => {
+    it('should return error when updating user with email that is in use', async() => {
         const user = {...updateSecondUser, email: updateThirdUser.email}
         const error = {username: 'Username or email is already in use.'};
 
         const res = await request(app)
-            .patch('graphql')
+            .post('/graphql')
             .set('Authorization', firstToken)
             .send(createUpdateMutation(user))
 
-        expect(res.body.errors[0].extensions.message).toEqual(error);
+        expect(res.body.errors[0].extensions.exception).toEqual(error);
     })
 
     it('should return user when userByUsername', async() => {
         const res = await request(app)
-            .get('/graphql')
+            .post('/graphql')
             .send(createUserByUsernameQuery(updateSecondUser.username))
 
         expect(res.body.data.userByUsername).toEqual(updateSecondUser)
@@ -481,9 +477,59 @@ export const resolverTests = () => {
 
     it('should return error when userByUsername with nonexistent username', async() => {
         const res = await request(app)
-        .get('/graphql')
-        .send(createUserByUsernameQuery('nonExistent'))
+            .post('/graphql')
+            .send(createUserByUsernameQuery('nonExistent'))
 
         expect(res.body.errors[0].message).toEqual('User not found.')
+    })
+    it('should return error when deleting user wtihout token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createDeleteMutation(1))
+
+        expect(res.body.errors[0].message).toBe('No auth token');
+    })
+
+    it('should return error when deleting user with incorrect token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', 'Bearer incorrect token')
+            .send(createDeleteMutation(1))
+
+        expect(res.body.errors[0].message).toBe('jwt malformed');
+    })
+
+    it('should return error when updating user wtihout token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createUpdateMutation(updateSecondUser))
+
+        expect(res.body.errors[0].message).toBe('No auth token');
+    })
+
+    it('should return error when updating user with incorrect token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', 'Bearer incorrect token')
+            .send(createUpdateMutation(updateSecondUser))
+
+        expect(res.body.errors[0].message).toBe('jwt malformed');
+    })
+
+    it('should return error when creating user wtihout token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .send(createManyMutation([{...thirdUser, password: 'testPassswrod', id: undefined}]))
+
+        expect(res.body.errors[0].message).toBe('No auth token');
+    })
+
+    it('should return error when creating user with incorrect token', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', 'Bearer incorrect token')
+            .send(createManyMutation([{...thirdUser, password: 'testPassswrod', id: undefined}]))
+
+        expect(res.body.errors[0].message).toBe('jwt malformed');
     })
 }
