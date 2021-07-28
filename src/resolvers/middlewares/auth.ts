@@ -2,35 +2,37 @@ import { IMiddlewareFunction } from "graphql-middleware";
 import UnauthorizedException from "../../expceptions/unauthorized";
 import { Request } from 'express';
 import { verify } from "jsonwebtoken";
-import { jwtSecret } from "src/authentication/jwt";
+import { jwtSecret } from "../../authentication/jwt";
 
 type AuthMiddleware = {
     [name: string]: {
         [name: string]: IMiddlewareFunction
     }
 }
+
+const authenticate = (async (resolve, parent, args, context, info) => {
+    const req = context.req;
+
+    req.foundUser = await getUserFromToken(req)
+ 
+    return await resolve(parent, args, context, info)
+}) as IMiddlewareFunction
+
 const authMiddleware: AuthMiddleware = {
     Mutation: {
-        createMany: async (resolve, parent, args, context, info) => {
-            const { req, res } = context;
-
-            req.user = await getUserFromToken(req)
-            return await resolve(parent, args, context, info)
-        },
-        update: async (resolve, parent, args, context, info) => {
-            const { req, res } = context;
-
-            req.user = await getUserFromToken(req)
-
-            return await resolve(parent, args, context, info)
-        },
+        createMany: authenticate,
+        update: authenticate,
+        delete: authenticate,
     },
+    Query: {
+        userById: authenticate,
+    }
 }
 
 const getUserFromToken = async (req: Request) => {
     let token = req.headers?.authorization;
     if(!token){
-        throw new UnauthorizedException('Unauthorized');
+        throw new UnauthorizedException('No auth token');
     }
     token = token.split(' ')[1];
 
