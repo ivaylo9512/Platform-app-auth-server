@@ -2,6 +2,7 @@ import { check, validationResult } from 'express-validator';
 import { NextFunction } from 'express';
 import { Response, Request } from "express";
 import User from 'src/entities/user';
+import UnauthorizedException from '../expceptions/unauthorized';
 
 const validateRegister = async(req: Request) => await Promise.all(
     [check('email', 'Must be a valid email.').isEmail().run(req),
@@ -49,11 +50,8 @@ export const registerResolverValidator = async(req: Request) => {
 export const createResolverValidator = async(req: Request) => {
     await validateCreate(req);
 
-    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
-    if(loggedUser.role != 'admin'){
-        return { 
-            user: 'Unauthorized.'
-        };
+    if(req.foundUser?.role != 'admin'){
+        throw new UnauthorizedException('Unauthorized.');
     }
 
     return checkForArrayInputErrors(req) || await validateCreateUsernamesAndEmails(req);
@@ -61,8 +59,7 @@ export const createResolverValidator = async(req: Request) => {
 export const createValidator = async(req: Request, res: Response, next: NextFunction) => {
     await validateCreate(req);
     
-    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
-    if(loggedUser.role != 'admin'){
+    if(req.foundUser?.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
 
@@ -78,11 +75,9 @@ export const createValidator = async(req: Request, res: Response, next: NextFunc
 export const updateResolverValidator = async(req: Request) => {
     await validateUpdate(req);
 
-    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
-    if(loggedUser.role != 'admin'){
-        return { 
-            user: 'Unauthorized.'
-        };
+    const loggedUser = req.foundUser!
+    if(loggedUser.id != req.body.id && loggedUser.role != 'admin'){
+        throw new UnauthorizedException('Unauthorized.');
     }
     
     return checkForInputErrors(req) || await findtUserOrFail(req, loggedUser) || await validateUpdateUsernameAndEmail(req);
@@ -91,8 +86,8 @@ export const updateResolverValidator = async(req: Request) => {
 export const updateValidator = async(req: Request, res: Response, next: NextFunction) => {
     await validateUpdate(req);
 
-    const loggedUser = await req.userService.verifyLoggedUser(req.user?.id);
-    if(req.body.id != loggedUser.id && loggedUser.role != 'admin'){
+    const loggedUser = req.foundUser!
+    if(loggedUser.id != req.body.id && loggedUser.role != 'admin'){
         return res.status(401).send('Unauthorized.');
     }
 
