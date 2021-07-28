@@ -51,6 +51,7 @@
     "express": "^5",
     "express-validator": "^6.12.1",
     "graphql": "^15.5.1",
+    "graphql-middleware": "^6.0.10",
     "ioredis": "^4.27.6",
     "jsonwebtoken": "^8.5.1",
     "nodemon": "^2.0.7",
