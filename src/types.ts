@@ -1,15 +1,12 @@
 import { Request, Response } from 'express';
 import UserService from './services/base/user-service';
+import RefreshTokenService from './services/base/refresh-token-service';
+import UserEntity from './entities/user';
 import { JwtUser } from './authentication/jwt-user';
-import UserRouter from './routers/user-routes'
+
 export type ApolloContext = {
-    services: { userService: UserService }
     req: Request,
     res: Response,
-}
-
-export interface UserRequest extends Request{
-    service?: UserService;
 }
 
 declare module 'jsonwebtoken' {
@@ -19,14 +16,15 @@ declare module 'jsonwebtoken' {
 declare global {
     namespace Express {
       interface User extends JwtUser{
-
       }
     }
 }
 declare global {
     namespace Express {
-      interface User extends JwtUser{
-
+      interface Request{
+        userService: UserService;
+        foundUser?: UserEntity;   
+        refreshTokenService: RefreshTokenService
       }
     }
 }
