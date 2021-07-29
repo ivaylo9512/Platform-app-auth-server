@@ -47,6 +47,7 @@ export const registerResolverValidator = async(req: Request) => {
 
     return checkForInputErrors(req) || await validateCreateUsernameAndEmail(req);
 }
+
 export const createResolverValidator = async(req: Request) => {
     await validateCreate(req);
 
@@ -55,7 +56,7 @@ export const createResolverValidator = async(req: Request) => {
     }
 
     return checkForArrayInputErrors(req) || await validateCreateUsernamesAndEmails(req);
-}
+} 
 export const createValidator = async(req: Request, res: Response, next: NextFunction) => {
     await validateCreate(req);
     
@@ -103,9 +104,11 @@ export const updateValidator = async(req: Request, res: Response, next: NextFunc
 type Error = {
     [name: string]: string;
 }
+
 type Errors = {
     [name: string]: Error;
 }
+
 const checkForInputErrors = (req: Request) => {
     const result = validationResult(req);
 
@@ -163,19 +166,43 @@ const validateCreateUsernamesAndEmails = async(req: Request) => {
 
 const validateCreateUsernameAndEmail = async(req: Request) => {
     const {username, email} = req.body;
-    const users = await req.userService.findByUsernameOrEmail(username, email); 
+    
+    const error = (await req.userService.findByUsernameOrEmail(username, email)).reduce((error: Error, user) => {
+        if(username == user.username){
+            error.username = 'Username is already in use.';
+        }
 
-    if(users.length > 0){
-        return {username: 'Username or email is already in use.' };
+        if(email == user.email){
+            error.email = 'Email is already in use.';
+
+        }
+        return error
+    }, {}); 
+
+    if(Object.keys(error).length > 0){
+        return error;
     }
 }
 
 const validateUpdateUsernameAndEmail = async(req: Request) => {
     const { id, username, email } = req.body;
-    const users = (await req.userService.findByUsernameOrEmail(username, email)).filter(user => user.id != id);
 
-    if(users.length > 0){
-        return {username: 'Username or email is already in use.' };
+    const error = (await req.userService.findByUsernameOrEmail(username, email)).reduce((error: Error, user) => {
+        if(user.id != id){
+            if(username == user.username){
+                error.username = 'Username is already in use.';
+            }
+
+            if(email == user.email){
+                error.email = 'Email is already in use.';
+
+            }
+        }
+        return error
+    }, {});
+
+    if(Object.keys(error).length > 0){
+        return error;
     }
 }
 
