@@ -1,7 +1,7 @@
 import { check, validationResult } from 'express-validator';
 import { NextFunction } from 'express';
 import { Response, Request } from "express";
-import User from 'src/entities/user';
+import User from '../entities/user';
 import UnauthorizedException from '../expceptions/unauthorized';
 
 const validateRegister = async(req: Request) => await Promise.all(
@@ -10,7 +10,7 @@ const validateRegister = async(req: Request) => await Promise.all(
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
+    check('birth', 'You must provide birth.').notEmpty().bail().isDate().withMessage('Birth must be a valid date.').run(req),
 ])
 
 const validateCreate = async(req: Request) => await Promise.all([
@@ -19,7 +19,7 @@ const validateCreate = async(req: Request) => await Promise.all([
     check('users.*.username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('users.*.firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('users.*.lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('users.*.age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
+    check('users.*.birth', 'You must provide birth.').notEmpty().bail().isDate().withMessage('Birth must be a valid date.').run(req),
     check('users.*.role', 'You must provide a role.').notEmpty().run(req),
 ])
 
@@ -29,7 +29,7 @@ const validateUpdate = async(req: Request) => await Promise.all([
     check('username', 'Username must be between 8 and 20 characters').isLength({min:8, max: 20}).run(req), 
     check('firstName', 'You must provide a firstName.').notEmpty().run(req),
     check('lastName', 'You must provide a lastName.').notEmpty().run(req),
-    check('age', 'You must provide age.').notEmpty().bail().isInt().withMessage('You must provide age as a whole number.').run(req),
+    check('birth', 'You must provide birth.').notEmpty().bail().isDate().withMessage('Birth must be a valid date.').run(req),
 ])
 
 export const registerValidator = async(req: Request, res: Response, next: NextFunction) => {

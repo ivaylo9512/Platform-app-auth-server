@@ -46,7 +46,7 @@ export default class UserResolver{
 
     @Mutation(() => User)
     async register(
-        @Arg('registerInput', { validate: false }) registerInput: RegisterInput,
+        @Arg('registerInput') registerInput: RegisterInput,
         @Ctx() { req, res }: ApolloContext
     ): Promise<User> {
         const user = await req.userService.register(registerInput);

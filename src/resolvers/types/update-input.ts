@@ -13,7 +13,7 @@ export default class UpdateInput{
     @Field()
     email: string
     @Field()
-    age: number
+    birth: string
     @Field()
     role: string
 }

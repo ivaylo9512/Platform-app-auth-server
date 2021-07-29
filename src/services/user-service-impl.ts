@@ -51,7 +51,7 @@ export default class UserServiceImpl implements UserService {
     }
 
     async register(registerInput: RegisterInput){
-        let { username, password, firstName, lastName, age, email } =  registerInput;
+        let { username, password, firstName, lastName, birth, email } =  registerInput;
 
         password = await argon2.hash(password);
         const user = this.repo.createUser({ 
@@ -59,22 +59,22 @@ export default class UserServiceImpl implements UserService {
             password,
             firstName, 
             lastName,
-            age,
+            birth,
             email
         })
 
         await this.repo.flush();
-
+        
         return user;
     }
 
     async createMany(usersInputs: RegisterInput[]){
-        const users = await Promise.all(usersInputs.map(async({ username, password, firstName, lastName, age, email, role }) => this.repo.create({
+        const users = await Promise.all(usersInputs.map(async({ username, password, firstName, lastName, birth, email, role }) => this.repo.create({
             username,
             password: await argon2.hash(password),
             firstName,
             lastName,
-            age,
+            birth,
             email,
             role
         })));
@@ -85,12 +85,12 @@ export default class UserServiceImpl implements UserService {
     }
 
     async update(updateInput: UpdateInput, foundUser: User){
-        let { username, firstName, lastName, age, email } =  updateInput;
+        let { username, firstName, lastName, birth, email } =  updateInput;
 
         foundUser.username = username;
         foundUser.firstName = firstName;
         foundUser.lastName = lastName;
-        foundUser.age = age;
+        foundUser.birth = new Date(birth);
         foundUser.email = email;
 
         this.repo.update(foundUser);

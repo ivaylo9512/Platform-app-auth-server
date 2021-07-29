@@ -1,11 +1,11 @@
 import './utils/load-env'
 import 'reflect-metadata';
-import { MikroORM, RequestContext } from '@mikro-orm/core';
+import { MikroORM, RequestContext, DateType } from '@mikro-orm/core';
 import mikroConfig from './mikro-orm.config';
 import express, { ErrorRequestHandler } from 'express';
-import { ApolloServer, UserInputError } from 'apollo-server-express';
+import { ApolloServer } from 'apollo-server-express';
 import { buildSchema} from 'type-graphql';
-import { applyMiddleware, IMiddlewareFunction } from 'graphql-middleware';
+import { applyMiddleware } from 'graphql-middleware';
 import UserResolver from './resolvers/User';
 import cors from 'cors';
 import Redis from 'ioredis';
@@ -18,6 +18,7 @@ import RefreshTokenServiceImpl from './services/refresh-token-service-impl';
 import RefreshToken from './entities/refresh-token';
 import { registerMiddleware, createManyMiddleware, updateManyMiddleware } from './resolvers/middlewares/user-validators';
 import authResolverMiddleware from './resolvers/middlewares/auth';
+import { DateTypeScalar } from './scalars/date-time';
 
 export const NODE_ENV = process.env.NODE_ENV;
 
@@ -62,6 +63,7 @@ export const initialize = async () => {
     const server = new ApolloServer({
         schema: applyMiddleware(await buildSchema({
             resolvers: [UserResolver],
+            scalarsMap: [{ type: DateType, scalar: DateTypeScalar }],
         }), authResolverMiddleware, registerMiddleware, createManyMiddleware, updateManyMiddleware),
         context: ({req, res}) => {
             req.userService = userService;

@@ -35,9 +35,9 @@ export default class User{
     @Property({ type: 'text', unique: true })
     email!: string;
 
-    @Field(() => Int)
-    @Property()
-    age!: number;
+    @Field(() => DateType, { nullable: true })
+    @Property({ type: DateType })
+    birth: Date;
 
     @Field(() => String)
     @Property({ type: 'text' })

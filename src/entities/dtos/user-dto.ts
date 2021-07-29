@@ -5,7 +5,7 @@ export default class UserDto{
     username: string;
     firstName: string;
     lastName: string;
-    age: number;
+    birth: Date;
     email: string;
     role: string;
 
@@ -14,7 +14,7 @@ export default class UserDto{
         this.username = user.username;
         this.firstName = user.firstName;
         this.lastName = user.lastName;
-        this.age = user.age;
+        this.birth = user.birth;
         this.email = user.email;
         this.role = user.role;
     }
