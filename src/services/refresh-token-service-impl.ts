@@ -1,6 +1,6 @@
 import RefreshTokenService from "./base/refresh-token-service";
 import RefreshTokenRepositoryImpl from "../repositories/refresh-token-repository-impl";
-import UnauthorizedException from "../expceptions/unauthorized";
+import UnauthorizedException from "../exceptions/unauthorized";
 import User from "../entities/user";
 import RefreshToken from "../entities/refresh-token";
 import { refreshExpiry, refreshSecret } from "../authentication/jwt";
@@ -46,21 +46,11 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
 
     async delete(token: string){
         try{
-            const jwtUser = verify(token, this.secret);
+            verify(token, this.secret);
+            return !!await this.repo.deleteByToken(token);
         }catch(err){
             return false;
         }
-
-        const refreshToken = await this.repo.findByToken(token);
-
-        if(!refreshToken){
-            return false;
-        }
-        
-        await this.repo.delete(refreshToken)
-        await this.repo.flush();
-
-        return true;
     }
 
     async deleteById(id: number, loggedUser: User){
@@ -73,10 +63,9 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
     }
 
     async getUserFromToken(token: string){
-        const payload = verify(token, this.secret);
+        verify(token, this.secret);
         
         const refreshToken = await this.repo.findOne({ token }, ['owner']);
-        console.log(refreshToken?.owner)
         if(!refreshToken){
             throw new UnauthorizedException('Unauthorized.');
         }

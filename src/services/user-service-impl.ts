@@ -9,7 +9,7 @@ import { Redis } from 'ioredis';
 import UpdateInput from "../resolvers/types/update-input";
 import { verify } from "jsonwebtoken";
 import RefreshToken from "../entities/refresh-token";
-import UnauthorizedException from "../expceptions/unauthorized";
+import UnauthorizedException from "../exceptions/unauthorized";
 import UserRepositoryImpl from '../repositories/user-repository-impl'
 
 export default class UserServiceImpl implements UserService {
@@ -59,7 +59,7 @@ export default class UserServiceImpl implements UserService {
             password,
             firstName, 
             lastName,
-            birth,
+            birth: new Date(birth),
             email
         })
 
@@ -74,7 +74,7 @@ export default class UserServiceImpl implements UserService {
             password: await argon2.hash(password),
             firstName,
             lastName,
-            birth,
+            birth: new Date(birth),
             email,
             role
         })));
@@ -103,10 +103,8 @@ export default class UserServiceImpl implements UserService {
         if(id != loggedUser.id && loggedUser.role != 'admin'){
             throw new UnauthorizedException('Unauthorized.');
         }
-        
-        const result = await this.repo.deleteById(id);
 
-        return !!result;
+        return !!await this.repo.deleteById(id);
     }
 
     async forgotPassword(email: string){
@@ -121,12 +119,6 @@ export default class UserServiceImpl implements UserService {
         // await sendEmail(email, `<a href="http://localhost:3000/change-password/${token}>change password</a>`)
         
         return true;
-    }
-
-    async addToken(user: User, refreshToken: RefreshToken){
-        user.refreshTokens.add(refreshToken);
-
-        await this.repo.flush()
     }
 
     async verifyLoggedUser(id: number){
