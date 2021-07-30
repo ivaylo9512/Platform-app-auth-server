@@ -5,6 +5,6 @@ export const DateTypeScalar = new GraphQLScalarType({
   description: "DateType object date scalar type",
 
   serialize(value: Date) {
-    return value; 
+      return value.toISOString().split('T')[0];
   },
 });

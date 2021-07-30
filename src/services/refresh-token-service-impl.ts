@@ -35,7 +35,10 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
     }
 
     async save(token: string, owner: User){
-        const refreshToken = await this.repo.save({ token, owner });
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + this.expiryDays);
+
+        const refreshToken = await this.repo.save({ token, owner, expiresAt });
         await this.repo.flush();
 
         return refreshToken;
@@ -73,7 +76,7 @@ export default class RefreshTokenServiceImpl implements RefreshTokenService{
         const payload = verify(token, this.secret);
         
         const refreshToken = await this.repo.findOne({ token }, ['owner']);
-
+        console.log(refreshToken?.owner)
         if(!refreshToken){
             throw new UnauthorizedException('Unauthorized.');
         }

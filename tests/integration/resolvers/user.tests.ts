@@ -16,17 +16,18 @@ type User = {
     password?: string,
     email: string,
     role: string,
-    age: number,
+    birth: string,
     firstName: string,
     lastName: string
 }
 
+const birth = new Date().toISOString().split('T')[0];
 const [secondUser, thirdUser, forthUser, fifthUser]: User[] = Array.from({length: 4}, (_user, i) => ({
     username: 'testUser' + i, 
     password: 'testUserPassword' + i, 
     email: `testEmail${i}@gmail.com`,
     role: 'user',
-    age: 25,
+    birth,
     firstName: 'firstNameTest' + i,
     lastName: 'lastNameTest' + i
 }))
@@ -36,7 +37,7 @@ const [updateSecondUser, updateThirdUser]: UpdateInput[] = Array.from({length: 2
     username: 'testUserUpdated' + i, 
     email: `testEmailUpdated${i}@gmail.com`,
     role: 'user',
-    age: 25,
+    birth,
     firstName: 'firstNameTestUpdate' + i,
     lastName: 'lastNameTestUpdate' + i
 }))
@@ -61,7 +62,7 @@ let createRegisterQuery = (user: User) => ({
                 register(registerInput: $registerInput){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -79,7 +80,7 @@ let createManyMutation = (users: User[]) => ({
                 createMany(users: $users){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -97,7 +98,7 @@ let createLoginMutation = (user: LoginInput) => ({
                 login(loginInput: $loginInput){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -115,7 +116,7 @@ let createUpdateMutation = (user: UpdateInput) => ({
                 update(updateInput: $updateInput){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -143,7 +144,7 @@ let createUserByUsernameQuery = (username: string) => ({
                 userByUsername(username: $username){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -161,7 +162,7 @@ let createUserByIdQuery = (id: number) => ({
                 userById(id: $id){
                     id,
                     username,
-                    age,
+                    birth,
                     email,
                     firstName,
                     lastName,
@@ -214,7 +215,7 @@ export const resolverTests = () => {
             .send(createRegisterQuery(user))
 
         const error = res.body.errors[0].extensions.exception;
-        expect(error.username).toBe('Username or email is already in use.');
+        expect(error.username).toBe('Username is already in use.');
     })
     
     it('should retrun error when register user with exsisting email', async() => {
@@ -225,7 +226,7 @@ export const resolverTests = () => {
             .send(createRegisterQuery(user))
 
         const error = res.body.errors[0].extensions.exception;
-        expect(error.username).toBe('Username or email is already in use.');
+        expect(error.email).toBe('Email is already in use.');
     })
 
     it('should create users when logged user is admin', async() => {
@@ -366,8 +367,8 @@ export const resolverTests = () => {
     it('should return Unauthorized when deleting user from another loggedUser that is not admin: role', async() => {
         const res = await request(app)
             .post('/graphql')
-            .send(createDeleteMutation(2))
             .set('Authorization', secondToken)
+            .send(createDeleteMutation(2))
 
         expect(res.body.errors[0].message).toBe('Unauthorized.');
     })
@@ -413,8 +414,8 @@ export const resolverTests = () => {
 
     it('should return error when creating users with usernames that are already in use', async() => {
         const error = {
-            user0: { username: 'User with given username or email already exists.'}, 
-            user1: {username: 'User with given username or email already exists.'}
+            user0: {username: 'Username is already in use.'}, 
+            user1: {username: 'Username is already in use.'}
         }
         const secondUser = {...updateSecondUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword', id: undefined};
         const thirdUser = {...updateThirdUser, email: 'uniqueEmail1@gmail.com', password: 'testPassword', id: undefined};
@@ -429,8 +430,8 @@ export const resolverTests = () => {
 
     it('should return error when creating users with emails that are already in use.', async() => {
         const error = {
-            user0: { username: 'User with given username or email already exists.'}, 
-            user1: {username: 'User with given username or email already exists.'}
+            user0: {email: 'Email is already in use.'}, 
+            user1: {email: 'Email is already in use.'}
         }
         const secondUser = {...updateSecondUser, username: 'uniqueUsername', password: 'testPassword', id: undefined};
         const thirdUser = {...updateThirdUser, username: 'uniqueUsername1', password: 'testPassword', id: undefined};
@@ -445,7 +446,7 @@ export const resolverTests = () => {
 
     it('should return error when updating user with username that is in use', async() => {
         const user = {...updateSecondUser, username: updateThirdUser.username}
-        const error = {username: 'Username or email is already in use.'};
+        const error = {username: 'Username is already in use.'};
         
         const res = await request(app)
             .post('/graphql')
@@ -457,7 +458,7 @@ export const resolverTests = () => {
 
     it('should return error when updating user with email that is in use', async() => {
         const user = {...updateSecondUser, email: updateThirdUser.email}
-        const error = {username: 'Username or email is already in use.'};
+        const error = {email: 'Email is already in use.'};
 
         const res = await request(app)
             .post('/graphql')
@@ -482,6 +483,7 @@ export const resolverTests = () => {
 
         expect(res.body.errors[0].message).toEqual('User not found.')
     })
+    
     it('should return error when deleting user wtihout token', async() => {
         const res = await request(app)
             .post('/graphql')
