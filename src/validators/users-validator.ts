@@ -2,7 +2,7 @@ import { check, validationResult } from 'express-validator';
 import { NextFunction } from 'express';
 import { Response, Request } from "express";
 import User from '../entities/user';
-import UnauthorizedException from '../expceptions/unauthorized';
+import UnauthorizedException from '../exceptions/unauthorized';
 
 const validateRegister = async(req: Request) => await Promise.all(
     [check('email', 'Must be a valid email.').isEmail().run(req),
@@ -150,13 +150,21 @@ const validateCreateUsernamesAndEmails = async(req: Request) => {
         const foundUser = await req.userService.findByUsernameOrEmail(username, email);
         const errors = await errorObject;
 
-        if(foundUser.length > 0){
-            errors['user' + i] = {
-                username: 'User with given username or email already exists.'
+        return foundUser.reduce((error: Errors, user) => {
+            if(username == user.username){
+                errors['user' + i] = {
+                    username: 'Username is already in use.'
+                }
             }
-        }
-        
-        return errors;
+    
+            if(email == user.email){
+                errors['user' + i] = {
+                    email: 'Email is already in use.'
+                }
+            }
+
+            return error
+        }, errors); 
     }, {})
 
     if(Object.keys(error).length > 0){

@@ -39,9 +39,7 @@ export const initialize = async () => {
         origin: ['http://localhost:3000', 'http://localhost:3001'],
         credentials: true
     }))
-
-    authMiddleware(app);
-
+    
     app.use(cookieParser(process.env.COOKIE_SECRET));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -49,6 +47,8 @@ export const initialize = async () => {
     app.use((_req, _res, next) => {
         RequestContext.create(orm.em, next);
     });
+
+    authMiddleware(app, userService);
 
     app.use('/users', (req, _res, next) => {
         req.userService = userService
