@@ -391,6 +391,16 @@ export const resolverTests = () => {
         expect(res.body.data.delete).toBe(true);
     })
 
+    it('should return error when user from token is unavailable.', async() => {
+        const res = await request(app)
+            .post('/graphql')
+            .set('Authorization', forthToken)
+            .send(createDeleteMutation(5))
+            .expect(200);
+
+        expect(res.body.errors[0].message).toBe('User from token is unavailable.');
+    })
+
     it('should return false when deleting nonexistent user', async() => {
         const res = await request(app)
             .post('/graphql')
@@ -402,12 +412,11 @@ export const resolverTests = () => {
     })
 
     it('should return error when updating nonexistent user', async() => {
-        const user = {...fifthUser} as UpdateInput
         const res = await request(app)
             .post('/graphql')
             .set('Content-Type', 'Application/json')
             .set('Authorization', adminToken)
-            .send(createUpdateMutation(user))
+            .send(createUpdateMutation(fifthUser as UpdateInput))
 
         expect(res.body.errors[0].message).toBe('User not found.');
     })
