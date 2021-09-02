@@ -8,7 +8,8 @@
     "dev": "nodemon dist/index.js",
     "start": "node dist/index.js",
     "start2": "ts-node src/index.ts",
-    "test": "cross-env NODE_ENV=test jest --testTimeout=20000"
+    "test": "cross-env NODE_ENV=test jest --testTimeout=20000",
+    "test-jenkins": "cross-env NODE_ENV=test jest --testTimeout=20000 --coverage --coverageDirectory=coverage/jest"
   },
   "repository": {
     "type": "git",
@@ -48,7 +49,7 @@
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
-    "express": "^5",
+    "express": "^5.0.0-alpha.8",
     "express-validator": "^6.12.1",
     "graphql": "^15.5.1",
     "graphql-middleware": "^6.0.10",
