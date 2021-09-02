@@ -20,7 +20,7 @@ export default class User{
     @Property({ type: 'date' })
     createdAt = new Date();
     
-    @Property({ type: DateType, onUpdate: () => new Date() })
+    @Property({ type: 'date', onUpdate: () => new Date() })
     updatedAt = new Date();
 
     @Field(() => String)
@@ -43,6 +43,6 @@ export default class User{
     @Property({ type: 'text' })
     role = 'user';
 
-    @OneToMany(() => RefreshToken, r => r.owner, {cascade: [Cascade.REMOVE]})
+    @OneToMany(() => RefreshToken, r => r.owner, {cascade: [Cascade.REMOVE], orphanRemoval: true})
     refreshTokens = new Collection<RefreshToken>(this);
 }

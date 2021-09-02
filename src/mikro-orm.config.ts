@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import path from 'path';
 import User from './entities/user';
 import RefreshToken from './entities/refresh-token';
-import EntitiyNotFoundException from './expceptions/enitity-not-found';
+import EntitiyNotFoundException from './exceptions/enitity-not-found';
 
 export default {
     findOneOrFailHandler: (entityName: string, _: Dictionary | IPrimaryKey) => new EntitiyNotFoundException(`${entityName} not found.`),

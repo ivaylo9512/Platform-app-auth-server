@@ -13,6 +13,5 @@ export default interface UserService {
     delete(id: number, loggedUser: User): Promise<boolean>;
     forgotPassword(email: string): void;
     update(updateInput: UpdateInput, loggedUser: User): Promise<User>;
-    addToken(user: User, refreshToken: RefreshToken): void;
     verifyLoggedUser(id?: number): Promise<User>;
 }

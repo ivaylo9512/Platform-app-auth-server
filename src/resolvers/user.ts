@@ -87,7 +87,6 @@ export default class UserResolver{
         res.header('Access-Control-Expose-Headers', 'Authorization'); 
         res.header('Authorization', token);
     
-        const refreshTokenEntity = req.refreshTokenService!.create(token, user) 
-        await req.userService?.addToken(user, refreshTokenEntity)
+        await req.refreshTokenService.save(refreshToken, user);
     }
 }

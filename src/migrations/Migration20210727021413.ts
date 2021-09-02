@@ -9,7 +9,7 @@ export class Migration20210727021413 extends Migration {
 
     this.addSql('create table "refresh_token" ("id" serial primary key, "token" text not null, "owner_id" int4 not null, "created_at" timestamptz(0) not null, "expires_at" timestamptz(0) not null);');
 
-    this.addSql('alter table "refresh_token" add constraint "refresh_token_owner_id_foreign" foreign key ("owner_id") references "user" ("id") on update cascade;');
+    this.addSql('alter table "refresh_token" add constraint "refresh_token_owner_id_foreign" foreign key ("owner_id") references "user" ("id") on delete cascade;');
   }
 
 }

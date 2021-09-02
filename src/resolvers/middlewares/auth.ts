@@ -1,5 +1,5 @@
 import { IMiddlewareFunction } from "graphql-middleware";
-import UnauthorizedException from "../../expceptions/unauthorized";
+import UnauthorizedException from "../../exceptions/unauthorized";
 import { Request } from 'express';
 import { verify } from "jsonwebtoken";
 import { jwtSecret } from "../../authentication/jwt";

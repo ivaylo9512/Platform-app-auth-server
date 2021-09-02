@@ -1,7 +1,7 @@
 import { EntityRepository } from "@mikro-orm/mysql";
 import { Repository, EntityData } from "@mikro-orm/core";
 import RefreshTokenRepository from "./base/refresh-token-repository";
-import RefreshToken from "src/entities/refresh-token";
+import RefreshToken from "../entities/refresh-token";
 
 export default class RefreshTokenRepositoryImpl extends EntityRepository<RefreshToken> implements RefreshTokenRepository{
     findById(id: number){
@@ -29,7 +29,7 @@ export default class RefreshTokenRepositoryImpl extends EntityRepository<Refresh
         return true;
     }
 
-    deleteById(id: number){
-        return this.nativeDelete({ id })
+    deleteByToken(token: string){
+        return this.nativeDelete({ token })
     }
 }

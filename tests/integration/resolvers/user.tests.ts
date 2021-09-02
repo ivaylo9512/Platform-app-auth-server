@@ -298,14 +298,14 @@ export const resolverTests = () => {
         expect(res.body.data.login).toEqual(fifthUser);
     })
 
-    it('should get token', async() => {
-        const res = await request(app)
-            .post('/graphql')
-            .set('Cookie', `refreshToken=${refreshToken}`)
-            expect(200);
+    // it('should get token', async() => {
+    //     const res = await request(app)
+    //         .post('/graphql')
+    //         .set('Cookie', `refreshToken=${refreshToken}`)
+    //         expect(200);
             
-        expect(res.get('Authorization')).toBeDefined();
-    })
+    //     expect(res.get('Authorization')).toBeDefined();
+    // })
 
     it('should return Unauthorized when login user with wrong password', async() => {
         const res = await request(app)

@@ -1,8 +1,6 @@
 import { Router, Response, Request } from "express";
 import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../authentication/jwt'
 import User from "../entities/user";
-import { refreshSecret } from "../authentication/jwt";
-import UnauthorizedException from "../expceptions/unauthorized";
 import UserDto from "../entities/dtos/user-dto";
 import { createValidator, registerValidator, updateValidator } from "../validators/users-validator";
 
@@ -54,7 +52,6 @@ router.post('/auth/createMany', createValidator, async(req, res) => {
 
 router.get('/refreshToken', async(req, res) => {
     const { signedCookies: { refreshToken } } = req
-    
     const user = await req.refreshTokenService.getUserFromToken(refreshToken);
 
     const token = getToken(user);
@@ -73,8 +70,7 @@ const setTokens = async (res: Response, user: User, req: Request) => {
     res.header('Access-Control-Expose-Headers', 'Authorization'); 
     res.header('Authorization', token);
 
-    const refreshTokenEntity = req.refreshTokenService.create(token, user) 
-    await req.userService.addToken(user, refreshTokenEntity)
+    await req.refreshTokenService.save(refreshToken, user);
 }
 
 export default router;
