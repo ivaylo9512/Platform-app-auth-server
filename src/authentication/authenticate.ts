@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy} from 'passport-jwt'
 import { jwtSecret } from './jwt'
-import { use, authenticate } from 'passport'
+import Passport from 'passport'
 import { Express } from 'express'
 import UserServiceImpl from 'src/services/user-service-impl'
 
@@ -14,10 +14,10 @@ const strategy = new Strategy(opts, (payload, done) => {
         role: payload.role
     });
 })
-use(strategy);
+Passport.use(strategy);
 export const authMiddleware = (app: Express, userService: UserServiceImpl) => {
     app.use('**/auth', (req, res, next) => {
-        authenticate(strategy, { session: false }, async(_error, user, info, _status) => {
+        Passport.authenticate(strategy, { session: false }, async(_error, user, info, _status) => {
             if(info){
                 return res.status(401).send(info.message)
             }

@@ -1,7 +1,7 @@
 import { check, validationResult } from 'express-validator';
 import { NextFunction } from 'express';
 import { Response, Request } from "express";
-import User from '../entities/user';
+import User from '../entities/user-entity';
 import UnauthorizedException from '../exceptions/unauthorized';
 
 const validateRegister = async(req: Request) => await Promise.all(

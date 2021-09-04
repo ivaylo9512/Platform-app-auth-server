@@ -1,19 +1,20 @@
 import './utils/load-env'
 import 'reflect-metadata';
+import 'passport';
 import { MikroORM, RequestContext, DateType } from '@mikro-orm/core';
 import mikroConfig from './mikro-orm.config';
 import express, { ErrorRequestHandler } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema} from 'type-graphql';
 import { applyMiddleware } from 'graphql-middleware';
-import UserResolver from './resolvers/User';
+import UserResolver from './resolvers/user-resolver';
 import cors from 'cors';
 import Redis from 'ioredis';
 import UserServiceImpl from './services/user-service-impl';
 import userRouter from './routers/user-routes';
 import cookieParser from 'cookie-parser';
 import { authMiddleware } from './authentication/authenticate';
-import User from './entities/user';
+import User from './entities/user-entity';
 import RefreshTokenServiceImpl from './services/refresh-token-service-impl';
 import RefreshToken from './entities/refresh-token';
 import { registerMiddleware, createManyMiddleware, updateManyMiddleware } from './resolvers/middlewares/user-validators';
@@ -31,6 +32,7 @@ export const initialize = async () => {
     await orm.getMigrator().up();
 
     const redis = new Redis();
+
     const userService = new UserServiceImpl(orm.em.getRepository(User), redis);
     const refreshTokenService = new RefreshTokenServiceImpl(orm.em.getRepository(RefreshToken));
 
@@ -64,6 +66,7 @@ export const initialize = async () => {
         schema: applyMiddleware(await buildSchema({
             resolvers: [UserResolver],
             scalarsMap: [{ type: DateType, scalar: DateTypeScalar }],
+            validate: false
         }), authResolverMiddleware, registerMiddleware, createManyMiddleware, updateManyMiddleware),
         context: ({req, res}) => {
             req.userService = userService;

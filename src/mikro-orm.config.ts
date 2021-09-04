@@ -1,7 +1,7 @@
 import { MikroORM, ReflectMetadataProvider, Dictionary, IPrimaryKey } from '@mikro-orm/core';
 import 'reflect-metadata';
 import path from 'path';
-import User from './entities/user';
+import User from './entities/user-entity';
 import RefreshToken from './entities/refresh-token';
 import EntitiyNotFoundException from './exceptions/enitity-not-found';
 
@@ -15,6 +15,8 @@ export default {
     user: 'postgres',
     metadataProvider: ReflectMetadataProvider,
     password: '1234',
+    host: '192.168.0.105',
+    port: 5432,
     entities: [User, RefreshToken],
     debug: process.env.NODE_ENV !== 'production',
     type: 'postgresql'

@@ -2,11 +2,9 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  coveragePathIgnorePatterns: [
-    "/node_modules/"
-  ],
   coverageReporters: [
     "text",
     "cobertura"
-  ]
+  ],
+  moduleFileExtensions: [ "js", "ts" ],
 };

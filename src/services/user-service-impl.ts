@@ -1,5 +1,5 @@
 import LoginInput from "../resolvers/types/login-input";
-import User from "../entities/user";
+import User from "../entities/user-entity";
 import argon2 from 'argon2';
 import UserService from "./base/user-service";
 import RegisterInput from "../resolvers/types/register-input";

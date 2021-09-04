@@ -3,7 +3,7 @@ import { ApolloContext } from "src/types";
 import LoginInput from './types/login-input';
 import RegisterInput from './types/register-input';
 import { getToken, getRefreshToken, COOKIE_OPTIONS } from '../authentication/jwt';
-import User from '../entities/user';
+import User from '../entities/user-entity';
 import UpdateInput from './types/update-input';
 import { Response, Request } from 'express'
 

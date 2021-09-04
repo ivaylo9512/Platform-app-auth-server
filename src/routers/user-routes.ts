@@ -1,6 +1,6 @@
 import { Router, Response, Request } from "express";
 import { getToken, getRefreshToken, COOKIE_OPTIONS, refreshExpiry } from '../authentication/jwt'
-import User from "../entities/user";
+import User from "../entities/user-entity";
 import UserDto from "../entities/dtos/user-dto";
 import { createValidator, registerValidator, updateValidator } from "../validators/users-validator";
 

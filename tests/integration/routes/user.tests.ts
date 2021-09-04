@@ -3,7 +3,7 @@ import request from 'supertest';
 import { getToken } from '../../../src/authentication/jwt';
 import { Express } from 'express';
 import { MikroORM } from '@mikro-orm/core';
-import UserEntity from '../../../src/entities/user';
+import UserEntity1 from '../../../src/entities/user-entity';
 import { Redis } from 'ioredis';
 
 type User = {
@@ -49,7 +49,7 @@ let forthToken:string, refreshToken: string;
 
 let app: Express, orm: MikroORM, redis: Redis;
 const createAdminUser = async () => {
-    const repo = orm.em.getRepository(UserEntity);
+    const repo = orm.em.getRepository(UserEntity1);
     const adminUser = repo.create({...secondUser, role: 'admin', username: 'adminUsername', email: 'adminEmail@gmail.com' });
     repo.persist(adminUser);
     await repo.flush()

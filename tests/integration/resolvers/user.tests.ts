@@ -1,11 +1,9 @@
-import { gql } from 'apollo-server-express';
 import { initialize } from '../../../src/app';
-import { ApolloServer } from 'apollo-server-express';
 import { MikroORM } from '@mikro-orm/core';
 import { getToken } from '../../../src/authentication/jwt';
 import request from 'supertest';
 import { Express } from 'express';
-import UserEntity from '../../../src/entities/user';
+import UserEntity from '../../../src/entities/user-entity';
 import { Redis } from 'ioredis';
 import LoginInput from '../../../src/resolvers/types/login-input';
 import UpdateInput from '../../../src/resolvers/types/update-input';

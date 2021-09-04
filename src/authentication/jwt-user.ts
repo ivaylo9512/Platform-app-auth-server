@@ -1,4 +1,4 @@
-import User from "../entities/user";
+import User from "../entities/user-entity";
 
 export class JwtUser {
     id: number

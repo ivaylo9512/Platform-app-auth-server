@@ -1,7 +1,7 @@
 import RefreshTokenService from "./base/refresh-token-service";
 import RefreshTokenRepositoryImpl from "../repositories/refresh-token-repository-impl";
 import UnauthorizedException from "../exceptions/unauthorized";
-import User from "../entities/user";
+import User from "../entities/user-entity";
 import RefreshToken from "../entities/refresh-token";
 import { refreshExpiry, refreshSecret } from "../authentication/jwt";
 import { verify } from "jsonwebtoken";
