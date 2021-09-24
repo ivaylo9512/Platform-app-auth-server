@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import UserService from './services/base/user-service';
 import RefreshTokenService from './services/base/refresh-token-service';
-import UserEntity from './entities/user';
+import UserEntity from './entities/user-entity';
 import { JwtUser } from './authentication/jwt-user';
 
 export type ApolloContext = {

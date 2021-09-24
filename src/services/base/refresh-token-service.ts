@@ -1,5 +1,5 @@
 import RefreshToken from "src/entities/refresh-token";
-import User from "src/entities/user";
+import User from "src/entities/user-entity";
 
 export default interface RefreshTokenService {
     findById(id: number, loggedUser: User): Promise<RefreshToken>;

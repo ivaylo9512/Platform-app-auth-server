@@ -15,7 +15,7 @@ export default {
     user: 'postgres',
     metadataProvider: ReflectMetadataProvider,
     password: '1234',
-    host: '192.168.0.105',
+    host: '192.168.0.106',
     port: 5432,
     entities: [User, RefreshToken],
     debug: process.env.NODE_ENV !== 'production',

@@ -1,4 +1,4 @@
-import User from "src/entities/user";
+import User from "src/entities/user-entity";
 import { EntityData } from "@mikro-orm/core";
 
 export default interface UserRepository {

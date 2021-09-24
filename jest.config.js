@@ -6,5 +6,9 @@ module.exports = {
     "text",
     "cobertura"
   ],
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/*.ts"
+  ],
   moduleFileExtensions: [ "js", "ts" ],
 };

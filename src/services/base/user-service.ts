@@ -1,6 +1,6 @@
 import RegisterInput from "src/resolvers/types/register-input";
 import UpdateInput from "src/resolvers/types/update-input";
-import User from "src/entities/user";
+import User from "src/entities/user-entity";
 import RefreshToken from "src/entities/refresh-token";
 
 export default interface UserService {
